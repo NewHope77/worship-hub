@@ -92,13 +92,14 @@ export default function SongEditor({ song, onDone }: Props) {
             <div>
               <div className="font-semibold text-amber-300 mb-1">Вставити текст цілком</div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Скопіюй пісню з Telegram чи нотаток і встав сюди — вона автоматично поріжеться на секції
-                (за заголовками «Куплет», «Приспів», або за порожніми рядками).
-                Акорди можна дописати потім у квадратних дужках: <span className="font-mono text-amber-400">[G]</span>Слава.
+                Скопіюй пісню звідки завгодно — з Telegram, нотаток чи сайту з акордами — і встав сюди.
+                Розуміє <b className="text-slate-300">звичайний формат</b>, де акорди стоять рядком над словами:
+                вони самі стануть на потрібні склади. Пісня поріжеться на секції за заголовками
+                («1 куплет», «Припев», «Бридж», «Проигрыш») або за порожніми рядками.
               </p>
             </div>
-            <textarea rows={9} className={inputClass + ' font-mono text-sm'}
-              placeholder={'Куплет 1\nСлава Тобі, Боже наш\n\nПриспів\nАлілуя, алілуя'}
+            <textarea rows={9} className={inputClass + ' font-mono text-sm whitespace-pre'}
+              placeholder={'1 куплет\nAm        F         C      G\nТекст пісні, акорди стоять над словами\n\nПрипев\n   F        C\nРядок приспіву'}
               value={pasteText} onChange={(e) => setPasteText(e.target.value)} />
             <div className="flex gap-2">
               <Button variant="primary" onClick={applyPaste} disabled={!pasteText.trim()} className="flex-1">

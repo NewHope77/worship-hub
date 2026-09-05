@@ -1,5 +1,6 @@
 import type { Section, SectionKind } from '../types'
 import { isChord } from './transpose'
+import { normalizeToChordPro } from './fromPlainText'
 
 /** Одна пара «акорд + текст під ним» */
 export interface Token {
@@ -72,7 +73,8 @@ const KIND_PATTERNS: [RegExp, SectionKind][] = [
 ]
 
 export function guessKind(label: string): SectionKind {
-  const s = label.trim()
+  // «1 куплет», «2. Припев», «III. Chorus» — номер спереду прибираємо
+  const s = label.trim().replace(/^[\d]+\s*[.)\-–—]?\s*/, '')
   for (const [re, kind] of KIND_PATTERNS) if (re.test(s)) return kind
   return 'other'
 }
@@ -101,8 +103,11 @@ export function newId(prefix = 'id'): string {
  * Вставили пісню одним шматком з Telegram/нотаток — ріжемо на секції.
  * Спершу за явними заголовками, інакше за порожніми рядками.
  */
-export function splitIntoSections(raw: string): Section[] {
-  const lines = raw.replace(/\r\n?/g, '\n').split('\n')
+export function splitIntoSections(input: string): Section[] {
+  // Текст міг бути вставлений у форматі «акорди окремим рядком над словами» —
+  // спершу приводимо його до ChordPro, і тільки потім ріжемо на секції.
+  const raw = normalizeToChordPro(input)
+  const lines = raw.split('\n')
   const sections: Section[] = []
   let current: { label: string; lines: string[] } | null = null
   let hasExplicitHeadings = false
@@ -136,7 +141,7 @@ export function splitIntoSections(raw: string): Section[] {
 
   // Немає заголовків — ріжемо за порожніми рядками й нумеруємо куплети
   if (!hasExplicitHeadings) {
-    const blocks = raw.replace(/\r\n?/g, '\n').split(/\n\s*\n+/).filter((b) => b.trim())
+    const blocks = raw.split(/\n\s*\n+/).filter((b) => b.trim())
     let verseNo = 0
     return blocks.map((body) => {
       verseNo += 1
