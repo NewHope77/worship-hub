@@ -73,6 +73,29 @@ export function looksLikeChordPro(text: string): boolean {
  * Вставляє акорди з `chordLine` у `textLine` за колонками.
  * Вставка йде з кінця, щоб позиції попередніх акордів не зсувались.
  */
+const WORD_CHAR = /[\p{L}\p{N}]/u
+
+/**
+ * Підтягує акорд до межі слова, якщо він упав усередину.
+ * Координати з PDF точні, а от після розпізнавання знімка зсуваються
+ * на символ-два — і акорд опиняється посеред слова.
+ */
+function snapToWordBoundary(text: string, col: number): number {
+  if (col <= 0 || col >= text.length) return col
+  if (!WORD_CHAR.test(text[col - 1]) || !WORD_CHAR.test(text[col])) return col
+
+  let start = col
+  while (start > 0 && WORD_CHAR.test(text[start - 1])) start -= 1
+  let end = col
+  while (end < text.length && WORD_CHAR.test(text[end])) end += 1
+
+  const toStart = col - start
+  const toEnd = end - col
+  const nearest = toStart <= toEnd ? start : end
+  // Далеко від краю — значить акорд справді береться на цьому складі
+  return Math.min(toStart, toEnd) <= 3 ? nearest : col
+}
+
 export function mergeChordLine(chordLine: string, textLine: string): string {
   const tokens = tokensOf(chordLine).filter((t) => CHORD_TOKEN.test(t.text))
   if (tokens.length === 0) return textLine
@@ -83,7 +106,8 @@ export function mergeChordLine(chordLine: string, textLine: string): string {
       // акорд «звисає» за кінець рядка — дотягуємо пробілами
       out = out.padEnd(col, ' ') + `[${text}]`
     } else {
-      out = out.slice(0, col) + `[${text}]` + out.slice(col)
+      const at = snapToWordBoundary(out, col)
+      out = out.slice(0, at) + `[${text}]` + out.slice(at)
     }
   }
   return out

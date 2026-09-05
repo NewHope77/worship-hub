@@ -31,6 +31,7 @@ export default function SongEditor({ song, onDone }: Props) {
   const [importError, setImportError] = useState('')
   const [importing, setImporting] = useState(false)
   const [progress, setProgress] = useState<{ stage: string; percent: number } | null>(null)
+  const [ocrWarning, setOcrWarning] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [tagInput, setTagInput] = useState(draft.tags.join(', '))
@@ -84,6 +85,8 @@ export default function SongEditor({ song, onDone }: Props) {
     try {
       const imported = await readSongFile(file, setProgress)
       applySections(splitIntoSections(imported.text), imported.title, imported.text)
+      // Розпізнавання зі знімка завжди варте вичитки
+      setOcrWarning(imported.kind === 'image')
     } catch (e) {
       setImportError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -269,6 +272,20 @@ export default function SongEditor({ song, onDone }: Props) {
             </Field>
           </div>
         </div>
+
+        {ocrWarning && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.08] px-4 py-3">
+            <div className="font-semibold text-[var(--accent)] mb-1">Перечитай текст</div>
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+              Це розпізнано зі знімка, тож у словах і акордах можливі помилки —
+              надто якщо знімок нечіткий. Пройдись по секціях і виправ, що поїхало.
+            </p>
+            <button onClick={() => setOcrWarning(false)}
+              className="text-xs text-[var(--text-faint)] hover:text-[var(--text)] mt-2">
+              зрозуміло, прибрати
+            </button>
+          </div>
+        )}
 
         <div>
           <div className="flex items-center justify-between mb-2">

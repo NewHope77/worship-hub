@@ -201,7 +201,8 @@ export async function readImage(
   const { createWorker } = await import('tesseract.js')
   onProgress?.({ stage: 'Завантажую розпізнавач', percent: 15 })
 
-  const worker = await createWorker(['ukr', 'eng'], 1, {
+  // Російська обов'язково: без неї модель не знає ы, ъ, э і плутає їх
+  const worker = await createWorker(['ukr', 'rus', 'eng'], 1, {
     logger: (m: { status?: string; progress?: number }) => {
       if (m.status === 'recognizing text') {
         onProgress?.({ stage: 'Розпізнаю текст', percent: 30 + (m.progress ?? 0) * 65 })
