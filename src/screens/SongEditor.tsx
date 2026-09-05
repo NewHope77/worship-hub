@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Section, SectionKind, Song } from '../types'
 import { SECTION_KINDS } from '../types'
 import { useStore } from '../store'
 import { newId, splitIntoSections, guessKind } from '../chordpro/parse'
 import { keyOptions, isMinorKey } from '../chordpro/transpose'
+import { readSongFile } from '../import/files'
 import { SortableList, SortableRow, DragHandle } from '../components/Sortable'
 import { TopBar, BackButton, Button, Field, inputClass } from '../components/ui'
 
@@ -27,6 +28,10 @@ export default function SongEditor({ song, onDone }: Props) {
   const [draft, setDraft] = useState<Song>(() => song ?? emptySong(meId ?? ''))
   const [pasteOpen, setPasteOpen] = useState(!song)
   const [pasteText, setPasteText] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
   const [tagInput, setTagInput] = useState(draft.tags.join(', '))
 
   const patch = (p: Partial<Song>) => setDraft((d) => ({ ...d, ...p }))
@@ -49,11 +54,37 @@ export default function SongEditor({ song, onDone }: Props) {
     }))
 
   const applyPaste = () => {
-    const sections = splitIntoSections(pasteText)
-    if (sections.length === 0) return
-    setDraft((d) => ({ ...d, sections, arrangement: sections.map((s) => s.id) }))
+    setImportError('')
+    try {
+      applySections(splitIntoSections(pasteText))
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  const applySections = (sections: Section[], fallbackTitle?: string) => {
+    if (sections.length === 0) throw new Error('Не вдалося знайти текст пісні у файлі.')
+    setDraft((d) => ({
+      ...d,
+      sections,
+      arrangement: sections.map((s) => s.id),
+      title: d.title.trim() || (fallbackTitle ?? '').trim(),
+    }))
     setPasteOpen(false)
     setPasteText('')
+  }
+
+  const handleFile = async (file: File) => {
+    setImportError('')
+    setImporting(true)
+    try {
+      const imported = await readSongFile(file)
+      applySections(splitIntoSections(imported.text), imported.title)
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setImporting(false)
+    }
   }
 
   const save = () => {
@@ -88,19 +119,72 @@ export default function SongEditor({ song, onDone }: Props) {
 
       <div className="flex-1 px-4 py-4 space-y-4 pb-24">
         {pasteOpen ? (
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4 space-y-3">
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4 space-y-4">
             <div>
-              <div className="font-semibold text-amber-300 mb-1">Вставити текст цілком</div>
+              <div className="font-semibold text-amber-300 mb-1">Додати пісню</div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Скопіюй пісню звідки завгодно — з Telegram, нотаток чи сайту з акордами — і встав сюди.
-                Розуміє <b className="text-slate-300">звичайний формат</b>, де акорди стоять рядком над словами:
-                вони самі стануть на потрібні склади. Пісня поріжеться на секції за заголовками
+                Візьми пісню з файлу або встав текстом. Розуміє{' '}
+                <b className="text-slate-300">звичайний формат</b>, де акорди стоять рядком над
+                словами — вони самі стануть на потрібні склади. Секції поріжуться за заголовками
                 («1 куплет», «Припев», «Бридж», «Проигрыш») або за порожніми рядками.
               </p>
             </div>
-            <textarea rows={9} className={inputClass + ' font-mono text-sm whitespace-pre'}
+
+            {/* Файл: PDF / DOCX / TXT */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setDragOver(false)
+                const f = e.dataTransfer.files[0]
+                if (f) void handleFile(f)
+              }}
+              className={`rounded-xl border-2 border-dashed p-4 text-center transition ${
+                dragOver ? 'border-amber-400 bg-amber-400/10' : 'border-white/15 bg-white/[0.03]'
+              }`}
+            >
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".pdf,.docx,.txt,.text,.md,.chopro,.cho,.crd,.pro,.onsong,text/plain,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) void handleFile(f)
+                  e.target.value = ''
+                }}
+              />
+              {importing ? (
+                <div className="text-sm text-amber-300 py-2">Читаю файл…</div>
+              ) : (
+                <>
+                  <Button onClick={() => fileRef.current?.click()} className="mb-2">
+                    📄 Вибрати файл
+                  </Button>
+                  <div className="text-[11px] text-slate-500">
+                    PDF, DOCX, TXT — або перетягни файл сюди
+                  </div>
+                </>
+              )}
+            </div>
+
+            {importError && (
+              <div className="rounded-xl bg-rose-500/12 border border-rose-500/30 px-3 py-2.5 text-xs text-rose-200 leading-relaxed">
+                {importError}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <span className="flex-1 h-px bg-white/10" />
+              <span className="text-[11px] text-slate-500 uppercase tracking-wider">або текстом</span>
+              <span className="flex-1 h-px bg-white/10" />
+            </div>
+
+            <textarea rows={8} className={inputClass + ' font-mono text-sm whitespace-pre'}
               placeholder={'1 куплет\nAm        F         C      G\nТекст пісні, акорди стоять над словами\n\nПрипев\n   F        C\nРядок приспіву'}
               value={pasteText} onChange={(e) => setPasteText(e.target.value)} />
+
             <div className="flex gap-2">
               <Button variant="primary" onClick={applyPaste} disabled={!pasteText.trim()} className="flex-1">
                 Розібрати на секції
@@ -109,8 +193,8 @@ export default function SongEditor({ song, onDone }: Props) {
             </div>
           </div>
         ) : (
-          <Button onClick={() => setPasteOpen(true)} className="w-full">
-            📋 Вставити текст цілком і розібрати
+          <Button onClick={() => { setImportError(''); setPasteOpen(true) }} className="w-full">
+            📄 Додати з файлу або вставити текстом
           </Button>
         )}
 
