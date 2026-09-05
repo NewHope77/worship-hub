@@ -118,6 +118,67 @@ function stripChordChart(lines: string[]): string[] {
   return lines
 }
 
+/** Уламок суфікса акорду: sus4, 7, o7, maj9… */
+const SUFFIX_TOKEN = /^(?:sus|maj|add|dim|aug|min|m|o|°|\+|\d)[\w\d#b+°-]{0,4}$/i
+
+/** Рядок, у якому немає нічого, крім таких уламків */
+function isSuffixLine(line: string): boolean {
+  const tokens = tokensOf(line)
+  if (tokens.length === 0) return false
+  return tokens.every((t) => t.text.length <= 5 && SUFFIX_TOKEN.test(t.text) && !isChordToken(t.text))
+}
+
+/**
+ * У чартах суфікси акордів друкують верхнім індексом, і з PDF вони приходять
+ * окремим рядком над акордами — виглядає як «акорд над акордом».
+ * Тут кожен такий уламок повертається до свого акорду: до найближчого,
+ * що стоїть у тій самій або лівішій колонці.
+ */
+export function mergeSuffixLines(text: string): string {
+  const lines = text.split('\n')
+  const out: string[] = []
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const below = lines[i + 1]
+
+    // Під рядком індексів може бути і чистий рядок акордів, і рядок,
+    // де акорди стоять серед слів — обидва випадки годяться
+    const belowHasChords =
+      below !== undefined && tokensOf(below).some((t) => isChordToken(t.text))
+
+    if (below !== undefined && isSuffixLine(line) && belowHasChords) {
+      const suffixes = tokensOf(line)
+      const attached = tokensOf(below).map((c) => ({ ...c }))
+
+      for (const suf of suffixes) {
+        // Індекс належить акорду в тій самій або лівішій колонці
+        let target: { text: string; col: number } | null = null
+        for (const c of attached) {
+          if (!isChordToken(c.text)) continue
+          if (c.col <= suf.col + 1 && (!target || c.col > target.col)) target = c
+        }
+        if (target) target.text += suf.text
+      }
+
+      // Збираємо рядок назад, зберігаючи вихідні колонки акордів
+      let rebuilt = ''
+      for (const c of attached) {
+        if (c.col > rebuilt.length) rebuilt = rebuilt.padEnd(c.col, ' ')
+        else if (rebuilt.length) rebuilt += ' '
+        rebuilt += c.text
+      }
+      out.push(rebuilt)
+      i += 1 // рядок з індексами спожито
+      continue
+    }
+
+    out.push(line)
+  }
+
+  return out.join('\n')
+}
+
 /** Головна функція: «акорди над текстом» → ChordPro */
 export function chordsAboveToChordPro(raw: string): string {
   const lines = stripChordChart(raw.replace(/\r\n?/g, '\n').replace(/\t/g, '    ').split('\n'))

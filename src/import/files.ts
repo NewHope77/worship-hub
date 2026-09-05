@@ -4,6 +4,8 @@
  * рівно над своїми складами, колонки доводиться відновлювати з геометрії.
  */
 
+import { mergeSuffixLines } from '../chordpro/fromPlainText'
+
 export type ImportKind = 'txt' | 'pdf' | 'docx'
 
 export interface ImportedFile {
@@ -45,6 +47,19 @@ interface Frag {
   w: number
   /** Кегль шрифту — потрібен, щоб не міряти сторінку заголовками */
   size: number
+}
+
+/**
+ * Суфікси акордів у чартах друкують верхнім індексом: дрібніше і вище рядка.
+ * Через це вони потрапляють в окремий рядок, і акорд «розривається»
+ * на Ab унизу та sus4 над ним. Такі шматки треба приклеїти назад.
+ */
+const CHORD_SUFFIX = /^(?:sus|maj|add|dim|aug|min|m|o|°|\+|-|#|b|\d)[\w\d#b+°-]{0,4}$/i
+
+function isSuperscript(f: Frag, bodySize: number): boolean {
+  // Поріг близький до основного кегля: у частині чартів індекс лише трохи
+  // дрібніший. Від хибних спрацювань боронить сам вигляд суфікса й довжина.
+  return f.size < bodySize * 0.96 && f.str.trim().length <= 5 && CHORD_SUFFIX.test(f.str.trim())
 }
 
 interface Column { min: number; max: number }
@@ -106,10 +121,15 @@ function detectColumns(frags: Frag[], bodySize: number): Column[] {
 }
 
 /** Складає рядок, повертаючи кожен фрагмент у його колонку */
-function fragsToLine(frags: Frag[], minX: number, charW: number): string {
+function fragsToLine(frags: Frag[], minX: number, charW: number, bodySize = 0): string {
   let out = ''
   for (const f of [...frags].sort((a, b) => a.x - b.x)) {
     const col = Math.max(0, Math.round((f.x - minX) / charW))
+    // Надрядковий суфікс — частина акорду, тому приклеюємо без пробілу
+    if (bodySize && isSuperscript(f, bodySize) && out && !/\s$/.test(out)) {
+      out += f.str
+      continue
+    }
     if (col > out.length) out = out.padEnd(col, ' ')
     else if (out.length && !/\s$/.test(out) && !/^\s/.test(f.str)) out += ' '
     out += f.str
@@ -136,12 +156,31 @@ function columnToLines(frags: Frag[], bodySize: number): string[] {
   // тож допуск має бути помітно меншим, інакше два рядки зіллються в один.
   const tolerance = Math.max(1.5, bodySize * 0.22)
 
+  // Спершу будуємо рядки з основного тексту, потім розкидаємо надрядкові
+  // суфікси по найближчих рядках — інакше кожен з них став би окремим рядком.
+  const main = [...frags].filter((f) => !isSuperscript(f, bodySize)).sort((a, b) => b.y - a.y)
+  const supers = frags.filter((f) => isSuperscript(f, bodySize))
+
   const rows: { y: number; frags: Frag[] }[] = []
-  for (const f of [...frags].sort((a, b) => b.y - a.y)) {
+  for (const f of main) {
     const row = rows.find((r) => Math.abs(r.y - f.y) <= tolerance)
     if (row) row.frags.push(f)
     else rows.push({ y: f.y, frags: [f] })
   }
+
+  for (const f of supers) {
+    // Верхній індекс сидить трохи вище свого рядка — беремо найближчий знизу
+    let best: { y: number; frags: Frag[] } | null = null
+    let bestDist = Infinity
+    for (const row of rows) {
+      const dist = f.y - row.y
+      if (dist < -tolerance || dist > bodySize * 0.7) continue
+      if (Math.abs(dist) < bestDist) { bestDist = Math.abs(dist); best = row }
+    }
+    if (best) best.frags.push(f)
+    else rows.push({ y: f.y, frags: [f] })
+  }
+  rows.sort((a, b) => b.y - a.y)
 
   const gaps = rows.slice(1).map((r, i) => rows[i].y - r.y).filter((g) => g > 0)
   const lineH = median(gaps) || bodySize * 1.2
@@ -149,7 +188,7 @@ function columnToLines(frags: Frag[], bodySize: number): string[] {
   const lines: string[] = []
   rows.forEach((row, i) => {
     if (i > 0 && rows[i - 1].y - row.y > lineH * 1.6) lines.push('')
-    lines.push(fragsToLine(row.frags, minX, charW))
+    lines.push(fragsToLine(row.frags, minX, charW, bodySize))
   })
   return lines
 }
@@ -214,7 +253,9 @@ async function readPdf(file: File): Promise<{ text: string; pages: number; title
     }
   }
 
-  return { text: pageTexts.join('\n\n'), pages: doc.numPages, title }
+  // Суфікси акордів приходять з PDF окремим рядком — повертаємо їх на місце
+  const text = mergeSuffixLines(pageTexts.join('\n\n'))
+  return { text, pages: doc.numPages, title }
 }
 
 /* ── DOCX ─────────────────────────────────────────────────────────── */
