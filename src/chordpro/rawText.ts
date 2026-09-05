@@ -42,30 +42,6 @@ export function transposeRaw(raw: string, semitones: number, targetKey: string):
     .join('\n')
 }
 
-/** Рядки з акордами — щоб їх можна було приховати */
-export function isChordOnlyLine(line: string): boolean {
-  return isChordLine(line)
-}
-
-/**
- * Прибирає рядки акордів, лишаючи самий текст.
- * Порожні рядки зберігаються, щоб структура не поїхала.
- */
-export function rawTextOnly(raw: string): string {
-  return raw
-    .split('\n')
-    .filter((line) => !isChordLine(line))
-    .join('\n')
-}
-
-/** Лишає рядки акордів і порожні — текст ховається, відступи цілі */
-export function rawChordsOnly(raw: string): string {
-  return raw
-    .split('\n')
-    .map((line) => (isChordLine(line) || !line.trim() ? line : ''))
-    .join('\n')
-}
-
 /**
  * Зворотне перетворення: ChordPro → «акорди рядком над словами».
  * Потрібне для пісень, доданих до появи режиму оригіналу, — щоб і в них

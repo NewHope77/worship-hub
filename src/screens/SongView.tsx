@@ -4,7 +4,7 @@ import { useStore, effectiveView } from '../store'
 import { transposeKey, semitonesBetween } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
 import RawSong from '../components/RawSong'
-import { transposeRaw, rawTextOnly, rawChordsOnly, sectionsToRaw } from '../chordpro/rawText'
+import { transposeRaw, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
 const VIEW_HINT: Record<ViewMode, string> = {
@@ -80,13 +80,11 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
     [song.raw, song.sections],
   )
 
-  const rawShown = useMemo(() => {
-    const shifted = transposeRaw(rawSource, transpose - personal.capo,
-      personal.capo ? shapeKey : currentKey)
-    if (view === 'text') return rawTextOnly(shifted)
-    if (view === 'grid') return rawChordsOnly(shifted)
-    return shifted
-  }, [rawSource, transpose, personal.capo, shapeKey, currentKey, view])
+  const rawShown = useMemo(
+    () => transposeRaw(rawSource, transpose - personal.capo,
+      personal.capo ? shapeKey : currentKey),
+    [rawSource, transpose, personal.capo, shapeKey, currentKey],
+  )
 
   const capoHint = useMemo(() => {
     if (!prefs.showCapo || personal.capo === 0) return null
@@ -248,7 +246,12 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
               усі символи однакової ширини, тож акорд лишається над своїм
               складом на будь-якому масштабі.
             */}
-            <RawSong text={rawShown} fontSize={prefs.rawFontSize} />
+            <RawSong
+              text={rawShown}
+              fontSize={prefs.rawFontSize}
+              showText={view !== 'grid'}
+              showChords={view !== 'text'}
+            />
           </div>
         ) : (
           <div className="px-4 pt-4">

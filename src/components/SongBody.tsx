@@ -53,6 +53,10 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: 
             </div>
           )
         }
+        // У режимі самих акордів рядок без жодного акорду не потрібен зовсім,
+        // інакше від нього лишалася б порожня смуга
+        if (chordsOnly && !lineHasChords(line)) return null
+
         return (
           <div key={i} className="whitespace-pre-wrap">
             {line.map((t, j) => {
