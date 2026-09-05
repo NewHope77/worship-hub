@@ -3,6 +3,8 @@ import type { InstrumentId, Member } from '../types'
 import { INSTRUMENTS } from '../types'
 import { useStore } from '../store'
 import { newId } from '../chordpro/parse'
+import { isCloudConnected } from '../storage'
+import CloudSetup from './CloudSetup'
 import { TopBar, BackButton, Button, Avatar, InstrumentTags, Field, inputClass } from '../components/ui'
 
 const COLORS = [
@@ -20,8 +22,13 @@ export default function Profile() {
   const { me, data, prefs, setPrefs, signOut, meId } = useStore()
   const [editing, setEditing] = useState<Member | null>(null)
   const [showMembers, setShowMembers] = useState(false)
+  const [showCloud, setShowCloud] = useState(false)
 
   if (!me) return null
+
+  if (showCloud) {
+    return <CloudSetup onDone={() => setShowCloud(false)} />
+  }
 
   if (editing) {
     return <MemberEditor member={editing} onDone={() => setEditing(null)} />
@@ -130,6 +137,12 @@ export default function Profile() {
         </div>
 
         <div className="space-y-2 pt-2">
+          <Button className="w-full !justify-between" onClick={() => setShowCloud(true)}>
+            <span>Спільна база</span>
+            <span className={`text-sm ${isCloudConnected() ? 'text-emerald-400' : 'text-[var(--text-faint)]'}`}>
+              {isCloudConnected() ? 'підключено →' : 'не підключено →'}
+            </span>
+          </Button>
           <Button className="w-full !justify-between" onClick={() => setShowMembers(true)}>
             <span>Учасники групи</span>
             <span className="text-[var(--text-faint)] text-sm">{data.members.length} →</span>
@@ -141,8 +154,9 @@ export default function Profile() {
         </div>
 
         <div className="text-[11px] text-[var(--text-faint)] leading-relaxed pt-4 border-t border-[var(--line-soft)]">
-          Дані зараз зберігаються на цьому пристрої. Наступний крок — спільна база,
-          щоб пісні й сети автоматично бачили всі учасники.
+          {isCloudConnected()
+            ? 'Пісні та сети спільні для всієї групи. Тональність, каподастр і свої нотатки лишаються особистими.'
+            : 'Пісні зберігаються на цьому пристрої. Підключи спільну базу, щоб їх бачила вся група.'}
         </div>
       </div>
     </div>

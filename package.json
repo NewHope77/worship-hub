@@ -16,6 +16,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@supabase/supabase-js": "^2.115.0",
     "fflate": "^0.8.3",
     "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
