@@ -26,19 +26,36 @@ body {
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 
-/* Рядок пісні: акорд стоїть над складом і не розсуває текст по горизонталі */
-.chord-line { line-height: 2.55; }
-.chord-slot { position: relative; white-space: pre-wrap; }
+/*
+ * Рядок пісні. Кожен акорд разом зі своїм складом — окрема колонка, тому
+ * акорд ніколи не наїжджає на сусідній: якщо він ширший за склад, колонка
+ * розширюється і трохи розсуває текст.
+ */
+.chord-line { line-height: 1.4; }
+
+.chord-slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  vertical-align: bottom;
+  white-space: pre;
+}
 .chord-slot > .chord {
-  position: absolute;
-  top: -1.35em;
-  left: 0;
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.82em;
   letter-spacing: -0.01em;
+  line-height: 1.5;
   color: #fbbf24;
   white-space: nowrap;
+  /* гарантований просвіт, щоб два сусідні акорди не злипались */
+  padding-right: 0.7em;
+}
+
+/* Шматок рядка без акорда переносимо як звичайний текст */
+.chord-slot--plain {
+  display: inline;
+  white-space: pre-wrap;
 }
 
 /*

@@ -13,7 +13,8 @@ export const localAdapter: StorageAdapter = {
       const seed = seedData()
       return {
         members: parsed.members ?? seed.members,
-        songs: parsed.songs ?? seed.songs,
+        // Пісні, збережені до появи режиму оригіналу, не мають поля raw
+        songs: (parsed.songs ?? seed.songs).map((s) => ({ ...s, raw: s.raw ?? '' })),
         setlists: parsed.setlists ?? seed.setlists,
         personal: parsed.personal ?? [],
         prefs: parsed.prefs ?? {},

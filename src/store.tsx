@@ -11,6 +11,8 @@ export const DEFAULT_PREFS: MemberPrefs = {
   fontSize: 17,
   scrollSpeed: 30,
   showCapo: true,
+  layout: 'parsed',
+  rawFontSize: 13,
 }
 
 interface Store {

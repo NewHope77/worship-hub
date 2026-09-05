@@ -3,6 +3,7 @@ import type { Song, ViewMode } from '../types'
 import { useStore, effectiveView } from '../store'
 import { transposeKey, semitonesBetween } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
+import { transposeRaw, rawTextOnly, rawChordsOnly, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
 const VIEW_HINT: Record<ViewMode, string> = {
@@ -68,6 +69,23 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
     nav.wakeLock?.request('screen').then((l) => { lock = l }).catch(() => { /* не критично */ })
     return () => { void lock?.release().catch(() => {}) }
   }, [])
+
+  const layout = prefs.layout
+  const showOriginal = layout === 'original'
+
+  // Текст «як у файлі». Для пісень, доданих раніше, збираємо його з секцій.
+  const rawSource = useMemo(
+    () => (song.raw?.trim() ? song.raw : sectionsToRaw(song.sections)),
+    [song.raw, song.sections],
+  )
+
+  const rawShown = useMemo(() => {
+    const shifted = transposeRaw(rawSource, transpose - personal.capo,
+      personal.capo ? shapeKey : currentKey)
+    if (view === 'text') return rawTextOnly(shifted)
+    if (view === 'grid') return rawChordsOnly(shifted)
+    return shifted
+  }, [rawSource, transpose, personal.capo, shapeKey, currentKey, view])
 
   const capoHint = useMemo(() => {
     if (!prefs.showCapo || personal.capo === 0) return null
@@ -145,11 +163,37 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             <div className="text-[11px] text-slate-500 mt-1.5">{VIEW_HINT[view]}</div>
           </div>
 
+          <div>
+            <div className="text-xs font-medium text-slate-400 mb-2">Як показувати</div>
+            <div className="flex gap-2">
+              <Button variant="chip" active={!showOriginal} className="flex-1"
+                onClick={() => setPrefs({ layout: 'parsed' })}>
+                Розібрано
+              </Button>
+              <Button variant="chip" active={showOriginal} className="flex-1"
+                onClick={() => setPrefs({ layout: 'original' })}>
+                Точно як в оригіналі
+              </Button>
+            </div>
+            <div className="text-[11px] text-slate-500 mt-1.5">
+              {showOriginal
+                ? 'Вигляд, відступи й переноси — як у джерелі, символ у символ'
+                : 'Переноситься під ширину екрана, акорди прив’язані до складів'}
+            </div>
+          </div>
+
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <div className="text-xs font-medium text-slate-400 mb-1.5">Розмір тексту</div>
-              <input type="range" min={13} max={30} value={prefs.fontSize} className="w-full accent-amber-500"
-                onChange={(e) => setPrefs({ fontSize: +e.target.value })} />
+              <div className="text-xs font-medium text-slate-400 mb-1.5">
+                {showOriginal ? `Масштаб: ${prefs.rawFontSize}px` : 'Розмір тексту'}
+              </div>
+              {showOriginal ? (
+                <input type="range" min={7} max={26} value={prefs.rawFontSize} className="w-full accent-amber-500"
+                  onChange={(e) => setPrefs({ rawFontSize: +e.target.value })} />
+              ) : (
+                <input type="range" min={13} max={30} value={prefs.fontSize} className="w-full accent-amber-500"
+                  onChange={(e) => setPrefs({ fontSize: +e.target.value })} />
+              )}
             </div>
             <div className="flex-1">
               <div className="text-xs font-medium text-slate-400 mb-1.5">
@@ -195,15 +239,33 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         </div>
       )}
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-4">
-        <SongBody
-          sections={song.sections}
-          arrangement={song.arrangement}
-          view={view}
-          transpose={transpose - personal.capo}
-          targetKey={personal.capo ? shapeKey : currentKey}
-          fontSize={prefs.fontSize}
-        />
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        {showOriginal ? (
+          <div className="px-4 pt-4 pb-40 overflow-x-auto">
+            {/*
+              Моноширинний шрифт — єдиний спосіб зберегти відступи джерела:
+              усі символи однакової ширини, тож акорд лишається над своїм
+              складом на будь-якому масштабі.
+            */}
+            <pre
+              className="font-mono leading-snug text-slate-100 whitespace-pre"
+              style={{ fontSize: prefs.rawFontSize, tabSize: 4 }}
+            >
+              {rawShown}
+            </pre>
+          </div>
+        ) : (
+          <div className="px-4 pt-4">
+            <SongBody
+              sections={song.sections}
+              arrangement={song.arrangement}
+              view={view}
+              transpose={transpose - personal.capo}
+              targetKey={personal.capo ? shapeKey : currentKey}
+              fontSize={prefs.fontSize}
+            />
+          </div>
+        )}
       </div>
 
       {/* Нижня панель: транспонування + автоскрол */}

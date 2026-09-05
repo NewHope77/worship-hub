@@ -54,14 +54,18 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: 
         }
         return (
           <div key={i} className="whitespace-pre-wrap">
-            {line.map((t, j) => (
-              <span key={j} className="chord-slot">
-                {showChords && t.chord && (
+            {line.map((t, j) => {
+              // Без акорда — звичайний текст, щоб довгі фрази нормально переносились
+              if (!showChords || !t.chord) {
+                return <span key={j} className="chord-slot--plain">{t.text}</span>
+              }
+              return (
+                <span key={j} className="chord-slot">
                   <span className="chord">{transposeChord(t.chord, transpose, targetKey)}</span>
-                )}
-                {t.text}
-              </span>
-            ))}
+                  <span>{t.text}</span>
+                </span>
+              )
+            })}
           </div>
         )
       })}

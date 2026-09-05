@@ -24,6 +24,7 @@ const SONGS: Song[] = [
     tags: ['демо'],
     youtubeUrl: '',
     notes: 'Це навчальна пісня. Видали її, коли розберешся.',
+    raw: '',
     sections: [
       { id: 'sg_demo_1', kind: 'intro', label: 'Вступ', body: '[G] [D] [Em] [C]' },
       { id: 'sg_demo_2', kind: 'verse', label: 'Куплет 1', body:
@@ -51,6 +52,7 @@ const SONGS: Song[] = [
     tags: ['гімн', 'поклоніння'],
     youtubeUrl: '',
     notes: '',
+    raw: '',
     sections: [
       { id: 'sg_svyat_1', kind: 'verse', label: 'Куплет 1', body:
         '[D]Свят, свят, свят, [G]Господь Бог [D]Всемогутній!\n' +

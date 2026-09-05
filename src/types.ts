@@ -3,6 +3,9 @@ export type InstrumentId =
 
 export type ViewMode = 'text' | 'chords' | 'grid'
 
+/** Показ пісні: розібраної на секції чи точно як в оригіналі */
+export type Layout = 'parsed' | 'original'
+
 export interface Instrument {
   id: InstrumentId
   name: string
@@ -26,6 +29,10 @@ export interface MemberPrefs {
   fontSize: number
   scrollSpeed: number
   showCapo: boolean
+  /** Який показ відкривати за замовчуванням */
+  layout: Layout
+  /** Кегль моноширинного тексту в режимі оригіналу */
+  rawFontSize: number
 }
 
 export type SectionKind =
@@ -56,6 +63,12 @@ export interface Song {
   youtubeUrl: string
   /** Загальні нотатки — бачать усі */
   notes: string
+  /**
+   * Текст точно в тому вигляді, як його вставили або витягли з файлу —
+   * з усіма відступами. Показується моноширинним шрифтом «як є».
+   * Порожній у пісень, доданих до появи цього режиму.
+   */
+  raw: string
   createdBy: string
   updatedAt: number
 }

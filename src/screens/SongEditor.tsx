@@ -17,7 +17,7 @@ function emptySong(createdBy: string): Song {
   const secId = newId('sec')
   return {
     id: newId('sg'), title: '', author: '', originalKey: 'G', tempo: null,
-    timeSignature: '4/4', tags: [], youtubeUrl: '', notes: '',
+    timeSignature: '4/4', tags: [], youtubeUrl: '', notes: '', raw: '',
     sections: [{ id: secId, kind: 'verse', label: 'Куплет 1', body: '' }],
     arrangement: [secId], createdBy, updatedAt: Date.now(),
   }
@@ -56,19 +56,21 @@ export default function SongEditor({ song, onDone }: Props) {
   const applyPaste = () => {
     setImportError('')
     try {
-      applySections(splitIntoSections(pasteText))
+      applySections(splitIntoSections(pasteText), undefined, pasteText)
     } catch (e) {
       setImportError(e instanceof Error ? e.message : String(e))
     }
   }
 
-  const applySections = (sections: Section[], fallbackTitle?: string) => {
+  const applySections = (sections: Section[], fallbackTitle?: string, rawText?: string) => {
     if (sections.length === 0) throw new Error('Не вдалося знайти текст пісні у файлі.')
     setDraft((d) => ({
       ...d,
       sections,
       arrangement: sections.map((s) => s.id),
       title: d.title.trim() || (fallbackTitle ?? '').trim(),
+      // Зберігаємо джерело як є — для показу «точно як в оригіналі»
+      raw: rawText ?? d.raw,
     }))
     setPasteOpen(false)
     setPasteText('')
@@ -79,7 +81,7 @@ export default function SongEditor({ song, onDone }: Props) {
     setImporting(true)
     try {
       const imported = await readSongFile(file)
-      applySections(splitIntoSections(imported.text), imported.title)
+      applySections(splitIntoSections(imported.text), imported.title, imported.text)
     } catch (e) {
       setImportError(e instanceof Error ? e.message : String(e))
     } finally {
