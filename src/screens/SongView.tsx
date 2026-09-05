@@ -249,7 +249,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
               </Button>
               <Button variant="chip" active={prefs.columns === 2} className="flex-1"
                 disabled={showOriginal}
-                onClick={() => setPrefs({ columns: 2 })}
+                onClick={() => setPrefs({ columns: 2, fontSize: Math.min(prefs.fontSize, 15) })}
                 title={showOriginal ? 'Доступно в показі «Розібрано»' : undefined}>
                 ▌▌ Дві
               </Button>
@@ -257,7 +257,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
               {showOriginal
                 ? 'Колонки працюють у показі «Розібрано»'
-                : 'Дві колонки вмикаються на широкому екрані — поверни телефон горизонтально або відкрий на планшеті'}
+                : 'Дві колонки вміщають удвічі більше. Якщо рядки ламаються — зменш текст кнопкою A− унизу'}
             </div>
           </div>
 
