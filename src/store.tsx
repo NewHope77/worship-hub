@@ -34,8 +34,15 @@ interface Store {
   deleteMember(id: string): void
 
   personalFor(songId: string): SongPersonal
-  setPersonal(songId: string, patch: Partial<Omit<SongPersonal, 'id' | 'memberId' | 'songId'>>): void
+  /** Патч може бути функцією — тоді він бачить актуальне значення, а не те,
+   *  що було на момент рендеру: інакше швидкі кліки поспіль губились. */
+  setPersonal(
+    songId: string,
+    patch: PersonalPatch | ((current: SongPersonal) => PersonalPatch),
+  ): void
 }
+
+type PersonalPatch = Partial<Omit<SongPersonal, 'id' | 'memberId' | 'songId'>>
 
 const Ctx = createContext<Store | null>(null)
 
@@ -161,7 +168,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const base: SongPersonal = existing ?? {
           id, memberId: meId, songId, transpose: 0, capo: 0, viewMode: null, note: '',
         }
-        const next = { ...base, ...patch }
+        const next = { ...base, ...(typeof patch === 'function' ? patch(base) : patch) }
         const personal = existing
           ? d.personal.map((p) => (p.id === id ? next : p))
           : [...d.personal, next]

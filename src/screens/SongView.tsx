@@ -86,6 +86,15 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
     [rawSource, transpose, personal.capo, shapeKey, currentKey],
   )
 
+  // Розмір тексту залежить від показу: у кожного свій діапазон
+  const zoomMin = showOriginal ? 7 : 13
+  const zoomMax = showOriginal ? 26 : 30
+  const fontSize = showOriginal ? prefs.rawFontSize : prefs.fontSize
+  const zoom = (step: number) => {
+    const next = Math.max(zoomMin, Math.min(zoomMax, fontSize + step))
+    setPrefs(showOriginal ? { rawFontSize: next } : { fontSize: next })
+  }
+
   const capoHint = useMemo(() => {
     if (!prefs.showCapo || personal.capo === 0) return null
     return `каподастр ${personal.capo} → форми в ${shapeKey}`
@@ -93,7 +102,10 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
 
   const shift = (d: number) => {
     if (usingSetlistKey) return
-    setPersonal(song.id, { transpose: Math.max(-11, Math.min(11, transpose + d)) })
+    // Рахуємо від актуального значення, щоб швидкі натискання не губились
+    setPersonal(song.id, (cur) => ({
+      transpose: Math.max(-11, Math.min(11, cur.transpose + d)),
+    }))
   }
 
   return (
@@ -181,19 +193,29 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="text-xs font-medium text-slate-400 mb-1.5">
-                {showOriginal ? `Масштаб: ${prefs.rawFontSize}px` : 'Розмір тексту'}
+          <div>
+            <div className="text-xs font-medium text-slate-400 mb-2">Тональність</div>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => shift(-1)} disabled={usingSetlistKey}
+                className="w-12 text-lg font-bold" aria-label="Нижче на півтон">−</Button>
+              <div className="flex-1 text-center">
+                <div className="text-xl font-bold text-amber-400 leading-none">{currentKey}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {usingSetlistKey ? 'задано сет-листом' : `оригінал ${song.originalKey}`}
+                </div>
               </div>
-              {showOriginal ? (
-                <input type="range" min={7} max={26} value={prefs.rawFontSize} className="w-full accent-amber-500"
-                  onChange={(e) => setPrefs({ rawFontSize: +e.target.value })} />
-              ) : (
-                <input type="range" min={13} max={30} value={prefs.fontSize} className="w-full accent-amber-500"
-                  onChange={(e) => setPrefs({ fontSize: +e.target.value })} />
-              )}
+              <Button onClick={() => shift(1)} disabled={usingSetlistKey}
+                className="w-12 text-lg font-bold" aria-label="Вище на півтон">+</Button>
             </div>
+            {!usingSetlistKey && transpose !== 0 && (
+              <button onClick={() => setPersonal(song.id, { transpose: 0 })}
+                className="w-full text-center text-[11px] text-slate-500 hover:text-slate-300 mt-2">
+                повернути оригінальну тональність ({song.originalKey})
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="text-xs font-medium text-slate-400 mb-1.5">
                 Каподастр: <span className="text-slate-200">{personal.capo || '—'}</span>
@@ -267,17 +289,21 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         )}
       </div>
 
-      {/* Нижня панель: транспонування + автоскрол */}
+      {/* Нижня панель: розмір тексту + автоскрол — те, що потрібно під час гри */}
       <div className="no-print sticky bottom-0 bg-[#0f1115]/90 backdrop-blur-xl border-t border-white/10 px-3 py-2.5 pb-safe">
         <div className="flex items-center gap-2">
-          <Button onClick={() => shift(-1)} disabled={usingSetlistKey} className="w-12 text-lg font-bold" aria-label="Нижче на півтон">−</Button>
+          <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
+            className="w-12 text-lg font-bold" aria-label="Дрібніший текст">
+            A−
+          </Button>
           <div className="flex-1 text-center">
-            <div className="text-xl font-bold text-amber-400 leading-none">{currentKey}</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
-              {usingSetlistKey ? 'задано сет-листом' : `оригінал ${song.originalKey}`}
-            </div>
+            <div className="text-xl font-bold text-amber-400 leading-none">{fontSize}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">розмір тексту</div>
           </div>
-          <Button onClick={() => shift(1)} disabled={usingSetlistKey} className="w-12 text-lg font-bold" aria-label="Вище на півтон">+</Button>
+          <Button onClick={() => zoom(1)} disabled={fontSize >= zoomMax}
+            className="w-12 text-lg font-bold" aria-label="Більший текст">
+            A+
+          </Button>
           <Button
             variant={scrolling ? 'primary' : 'ghost'}
             onClick={() => setScrolling((s) => !s)}
@@ -287,12 +313,6 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             {scrolling ? '⏸' : '▶'}
           </Button>
         </div>
-        {!usingSetlistKey && transpose !== 0 && (
-          <button onClick={() => setPersonal(song.id, { transpose: 0 })}
-            className="w-full text-center text-[11px] text-slate-500 hover:text-slate-300 mt-1.5">
-            повернути оригінальну тональність ({song.originalKey})
-          </button>
-        )}
       </div>
     </div>
   )
