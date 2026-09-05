@@ -286,7 +286,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
               {showOriginal
                 ? 'Правка акордів працює в показі «Розібрано»'
-                : 'Акцент приглушує текст і збільшує акорди — зручно басу й барабанам'}
+                : 'Правити може будь-хто з групи, і правку побачать усі. Акцент — окремо: акорди більші, текст тихіший'}
             </div>
           </div>
 
@@ -322,7 +322,8 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       {editing && (
         <div className="no-print flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)]/12 border-b border-[var(--line)]">
           <span className="text-xs text-[var(--text-muted)] flex-1">
-            Тисни на акорд, щоб посунути чи змінити. Тисни на слово — щоб додати акорд.
+            Тисни на акорд, щоб посунути чи змінити; на слово — щоб додати.
+            <b className="text-[var(--text)]"> Правку побачать усі учасники.</b>
           </span>
           <Button variant="chip" onClick={() => setEditing(false)}>Готово</Button>
         </div>
