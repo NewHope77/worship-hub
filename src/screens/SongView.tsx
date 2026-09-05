@@ -11,9 +11,6 @@ import RawSong from '../components/RawSong'
 import { transposeRaw, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
-/** Пікселів за секунду — спокійний темп читання під час гри */
-const AUTOSCROLL_SPEED = 30
-
 const VIEW_HINT: Record<ViewMode, string> = {
   chords: 'Акорди над словами',
   text:   'Тільки слова, без акордів',
@@ -41,7 +38,6 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   const [editing, setEditing] = useState(false)
   const [spot, setSpot] = useState<ChordSpot | null>(null)
   const [picking, setPicking] = useState<ChordSpot | null>(null)
-  const [scrolling, setScrolling] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const usingSetlistKey = setlistTranspose !== null
@@ -50,27 +46,6 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   const currentKey = transposeKey(song.originalKey, transpose)
   // Каподастр не змінює звучання — тільки аплікатуру: показуємо форму акорду
   const shapeKey = transposeKey(currentKey, -personal.capo)
-
-  // Автоскрол
-  useEffect(() => {
-    if (!scrolling) return
-    const el = scrollRef.current
-    if (!el) return
-    let raf = 0
-    let last = performance.now()
-    const step = (now: number) => {
-      const dt = now - last
-      last = now
-      el.scrollTop += AUTOSCROLL_SPEED * (dt / 1000)
-      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) {
-        setScrolling(false)
-        return
-      }
-      raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [scrolling])
 
   // Не даємо екрану згаснути під час гри
   useEffect(() => {
@@ -356,7 +331,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         )}
       </div>
 
-      {/* Нижня панель: розмір тексту + автоскрол — те, що потрібно під час гри */}
+      {/* Нижня панель: розмір тексту — його міняють найчастіше */}
       <div className="no-print sticky bottom-0 bg-[var(--bg)]/90 backdrop-blur-xl border-t border-[var(--line)] px-3 py-2.5 pb-safe">
         <div className="flex items-center gap-2">
           <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
@@ -370,14 +345,6 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           <Button onClick={() => zoom(1)} disabled={fontSize >= zoomMax}
             className="w-12 text-lg font-bold" aria-label="Більший текст">
             A+
-          </Button>
-          <Button
-            variant={scrolling ? 'primary' : 'ghost'}
-            onClick={() => setScrolling((s) => !s)}
-            className="w-12"
-            aria-label={scrolling ? 'Спинити автоскрол' : 'Автоскрол'}
-          >
-            {scrolling ? '⏸' : '▶'}
           </Button>
         </div>
       </div>
