@@ -59,6 +59,27 @@ export function mergeChordLine(chordLine: string, textLine: string): string {
   return out
 }
 
+/**
+ * Рядок, у якому акорди стоять поруч зі словами на одній лінії (так буває
+ * у щільно зверстаних чартах). Акорд впізнаємо тільки якщо він відокремлений
+ * подвійним пробілом — інакше англійське слово «A» чи «Am» стало б акордом.
+ */
+function inlineChordsToChordPro(line: string): string {
+  return line.replace(/(^|\s{2,})([^\s]+)(?=\s{2,}|$)/g, (whole, gap: string, token: string) =>
+    CHORD_TOKEN.test(token) ? `${gap}[${token}]` : whole,
+  )
+}
+
+/** Чи рядок містить і акорди, і справжні слова */
+function isMixedLine(line: string): boolean {
+  if (isChordLine(line) || !line.trim()) return false
+  const tokens = tokensOf(line)
+  const chords = tokens.filter((t) => CHORD_TOKEN.test(t.text))
+  if (chords.length === 0) return false
+  const words = tokens.filter((t) => !CHORD_TOKEN.test(t.text) && /[\p{L}]{2,}/u.test(t.text))
+  return words.length > 0 && /\s{2,}/.test(line.trim())
+}
+
 /** Рядок акордів без тексту під ним — програш, вступ тощо */
 function chordOnlyToChordPro(line: string): string {
   return tokensOf(line)
@@ -100,7 +121,7 @@ export function chordsAboveToChordPro(raw: string): string {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (!isChordLine(line)) {
-      out.push(line.replace(/\s+$/, ''))
+      out.push(isMixedLine(line) ? inlineChordsToChordPro(line) : line.replace(/\s+$/, ''))
       continue
     }
     const next = lines[i + 1]
