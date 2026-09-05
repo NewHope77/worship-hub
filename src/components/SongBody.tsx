@@ -22,6 +22,8 @@ interface Props {
   transpose: number
   targetKey: string
   fontSize: number
+  /** Дві колонки замість однієї */
+  columns?: number
   /** Увімкнено правку акордів — тоді по них можна тицяти */
   editing?: boolean
   onPickChord?(spot: ChordSpot): void
@@ -134,7 +136,7 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly, se
 }
 
 export default function SongBody({
-  sections, arrangement, view, transpose, targetKey, fontSize, editing, onPickChord,
+  sections, arrangement, view, transpose, targetKey, fontSize, columns, editing, onPickChord,
 }: Props) {
   const byId = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections])
   const order = arrangement.length ? arrangement : sections.map((s) => s.id)
@@ -153,7 +155,7 @@ export default function SongBody({
   }
 
   return (
-    <div style={{ fontSize }} className="pb-40">
+    <div style={{ fontSize }} className={`pb-40${columns === 2 ? ' two-columns' : ''}`}>
       {items.map(({ section, repeat }, i) => (
         <section key={`${section.id}_${i}`}>
           <SectionHeading section={section} repeat={repeat} />

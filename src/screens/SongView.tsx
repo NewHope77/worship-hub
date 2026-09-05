@@ -241,6 +241,27 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Колонки</div>
+            <div className="flex gap-2">
+              <Button variant="chip" active={prefs.columns !== 2} className="flex-1"
+                onClick={() => setPrefs({ columns: 1 })}>
+                ▌ Одна
+              </Button>
+              <Button variant="chip" active={prefs.columns === 2} className="flex-1"
+                disabled={showOriginal}
+                onClick={() => setPrefs({ columns: 2 })}
+                title={showOriginal ? 'Доступно в показі «Розібрано»' : undefined}>
+                ▌▌ Дві
+              </Button>
+            </div>
+            <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
+              {showOriginal
+                ? 'Колонки працюють у показі «Розібрано»'
+                : 'Дві колонки вмикаються на широкому екрані — поверни телефон горизонтально або відкрий на планшеті'}
+            </div>
+          </div>
+
+          <div>
             <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Акорди</div>
             <div className="flex gap-2">
               <Button variant="chip" active={editing} className="flex-1"
@@ -324,6 +345,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
               transpose={transpose - personal.capo}
               targetKey={personal.capo ? shapeKey : currentKey}
               fontSize={prefs.fontSize}
+              columns={prefs.columns}
               editing={editing}
               onPickChord={setSpot}
             />

@@ -38,6 +38,8 @@ export interface MemberPrefs {
   theme: Theme
   /** Акорди крупніші, текст приглушений — для баса й барабанів */
   chordsAccent: boolean
+  /** Скільки колонок — на широкому екрані дві вміщають удвічі більше */
+  columns: 1 | 2
 }
 
 export type SectionKind =

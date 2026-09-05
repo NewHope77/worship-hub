@@ -92,6 +92,28 @@ body {
   padding-right: 1em;
 }
 
+/*
+ * Дві колонки: пісня йде зліва вниз, потім справа. Секцію не можна рвати
+ * навпіл між колонками — інакше куплет розірветься посеред рядка.
+ */
+/*
+ * Тільки на широкому екрані: на телефоні вертикально колонка виходить така
+ * вузька, що рядок ламається після двох слів і читати стає гірше, ніж
+ * в одну. Поверни телефон горизонтально — колонки з'являться самі.
+ */
+@media (min-width: 640px) {
+  .two-columns {
+    column-count: 2;
+    column-gap: 1.75rem;
+    column-rule: 1px solid var(--line-soft);
+  }
+  .two-columns > section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .two-columns > section:first-child { margin-top: 0; }
+}
+
 /* Режим правки: показуємо, куди можна тицьнути */
 .editable-chord {
   cursor: pointer;
