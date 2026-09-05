@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { isChordLine, isChordToken } from '../chordpro/fromPlainText'
+import { isChordLine, isChordToken, isSlashBass, isUnambiguousChord } from '../chordpro/fromPlainText'
 
 /**
  * Показ пісні «точно як в оригіналі»: моноширинний шрифт зберігає всі
@@ -42,7 +42,11 @@ function renderLine(line: string) {
     }
     const nextChar = line.slice(re.lastIndex, re.lastIndex + 2)
     const nextGapWide = nextChar === '' || /^\s{2}/.test(nextChar) || /^\s*$/.test(nextChar)
-    const isChord = isChordToken(piece) && (pureChordLine || (prevGapWide && nextGapWide))
+    // Відірваний бас («/E») — теж частина акорду, але тільки в рядку акордів
+    const chordLike = isChordToken(piece) || (pureChordLine && isSlashBass(piece))
+    const isChord =
+      chordLike &&
+      (pureChordLine || (prevGapWide && nextGapWide) || isUnambiguousChord(piece))
 
     parts.push(
       isChord

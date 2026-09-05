@@ -9,8 +9,16 @@
  * уміє показувати в трьох режимах і транспонувати.
  */
 
-/** Акорд: латиниця, бо кирилична «А» не має бути акордом */
-const CHORD_TOKEN = /^[A-H][b#]?(?:m|min|maj|M|dim|aug|sus|add|°|\+)?\d*(?:sus\d|add\d+|maj\d+|m\d+)*(?:\/[A-H][b#]?)?$/
+/**
+ * Акорд: латиниця, бо кирилична «А» не має бути акордом.
+ * Суфікс лишаємо широким — у чартах трапляються o7 (зменшений), ø, add9,
+ * sus2, m7b5 тощо. Бас після скісної інколи пишуть малою літерою.
+ */
+const CHORD_TOKEN =
+  /^[A-H][b#]?(?:o|°|ø|\+|-|m|min|maj|M|dim|aug|sus|add|alt)?\d*(?:sus\d|add\d*|maj\d*|m\d*|[b#]\d+|o\d*)*(?:\/[A-Ha-h][b#]?)?$/
+
+/** Бас, відірваний від свого акорду в окремий шматок: /E, /bE, /C */
+const SLASH_BASS = /^\/[b#]?[A-Ha-h][b#]?$/
 
 /** Службові позначки, які трапляються в рядку акордів: | x2 (2x) : ‖ - */
 const SERVICE_TOKEN = /^(?:[|‖:%/\\.\-–—]+|\(?\d+\s*[xх]\)?|\(?[xх]\s*\d+\)?|N\.?C\.?)$/i
@@ -36,7 +44,24 @@ export function isChordLine(line: string): boolean {
   if (tokens.length === 0) return false
   const chords = tokens.filter((t) => CHORD_TOKEN.test(t.text))
   if (chords.length === 0) return false
-  return tokens.every((t) => CHORD_TOKEN.test(t.text) || SERVICE_TOKEN.test(t.text))
+  return tokens.every(
+    (t) => CHORD_TOKEN.test(t.text) || SLASH_BASS.test(t.text) || SERVICE_TOKEN.test(t.text),
+  )
+}
+
+/**
+ * Акорд, який неможливо сплутати зі словом: має цифру, скісну або знак
+ * альтерації (C7, Eb/G, Ab, Go7). На відміну від «Go», «Am», «A», які
+ * в англійському тексті цілком можуть бути звичайними словами.
+ */
+export function isUnambiguousChord(token: string): boolean {
+  if (!CHORD_TOKEN.test(token) && !SLASH_BASS.test(token)) return false
+  return /[0-9/]/.test(token) || /^[A-H][b#]/.test(token)
+}
+
+/** Чи токен є відірваним басом («/E») — його теж підсвічуємо як акорд */
+export function isSlashBass(token: string): boolean {
+  return SLASH_BASS.test(token)
 }
 
 /** Чи текст уже у форматі ChordPro */
@@ -70,8 +95,12 @@ export function mergeChordLine(chordLine: string, textLine: string): string {
  * подвійним пробілом — інакше англійське слово «A» чи «Am» стало б акордом.
  */
 function inlineChordsToChordPro(line: string): string {
-  return line.replace(/(^|\s{2,})([^\s]+)(?=\s{2,}|$)/g, (whole, gap: string, token: string) =>
-    CHORD_TOKEN.test(token) ? `${gap}[${token}]` : whole,
+  // Спершу однозначні акорди — їх можна брати навіть без подвійного пробілу
+  const withObvious = line.replace(/(^|\s)([^\s]+)(?=\s|$)/g, (whole, gap: string, token: string) =>
+    isUnambiguousChord(token) ? `${gap}[${token}]` : whole,
+  )
+  return withObvious.replace(/(^|\s{2,})([^\s[\]]+)(?=\s{2,}|$)/g, (whole, gap: string, token: string) =>
+    CHORD_TOKEN.test(token) || SLASH_BASS.test(token) ? `${gap}[${token}]` : whole,
   )
 }
 

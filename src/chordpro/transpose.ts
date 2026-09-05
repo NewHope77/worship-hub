@@ -13,7 +13,7 @@ const FLAT_KEYS = new Set(['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb',
                            'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm', 'Abm'])
 
 /** Корінь + суфікс + опційний бас: Am7, C#sus4, F/A, Gmaj7/B */
-const CHORD_RE = /^([A-H][b#]?)([^/\s]*)(?:\/([A-H][b#]?))?$/
+const CHORD_RE = /^([A-H][b#]?)([^/\s]*)(?:\/([A-Ha-h][b#]?))?$/
 
 export interface ParsedChord {
   root: string
@@ -25,8 +25,10 @@ export function parseChord(raw: string): ParsedChord | null {
   const m = CHORD_RE.exec(raw.trim())
   if (!m) return null
   if (!(m[1] in NOTE_TO_PC)) return null
-  if (m[3] && !(m[3] in NOTE_TO_PC)) return null
-  return { root: m[1], suffix: m[2] ?? '', bass: m[3] ?? null }
+  // Бас інколи пишуть малою: Ab/c
+  const bass = m[3] ? m[3][0].toUpperCase() + m[3].slice(1) : null
+  if (bass && !(bass in NOTE_TO_PC)) return null
+  return { root: m[1], suffix: m[2] ?? '', bass }
 }
 
 /** Чи схожий рядок на акорд (для підсвітки та сітки) */
