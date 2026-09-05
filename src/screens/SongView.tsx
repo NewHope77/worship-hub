@@ -115,7 +115,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         title={song.title}
         subtitle={
           <span className="flex items-center gap-1.5">
-            <span className="text-amber-400 font-semibold">{currentKey}</span>
+            <span className="text-[var(--accent)] font-semibold">{currentKey}</span>
             {transpose !== 0 && <span>({transpose > 0 ? '+' : ''}{transpose})</span>}
             {usingSetlistKey && <span className="text-sky-400">· тональність сету</span>}
             {song.tempo && <span>· {song.tempo} BPM</span>}
@@ -127,7 +127,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             <button onClick={() => setPanel(panel === 'note' ? 'none' : 'note')}
               aria-label="Нотатки"
               className={`w-9 h-9 grid place-items-center rounded-full transition ${
-                panel === 'note' ? 'bg-amber-500 text-slate-950' : 'hover:bg-white/10 text-slate-300'}`}>
+                panel === 'note' ? 'bg-amber-500 text-slate-950' : 'hover:bg-[var(--surface-hover)] text-[var(--text)]'}`}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M4 5h16M4 10h16M4 15h10" />
               </svg>
@@ -138,7 +138,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             <button onClick={() => setPanel(panel === 'settings' ? 'none' : 'settings')}
               aria-label="Налаштування"
               className={`w-9 h-9 grid place-items-center rounded-full transition ${
-                panel === 'settings' ? 'bg-amber-500 text-slate-950' : 'hover:bg-white/10 text-slate-300'}`}>
+                panel === 'settings' ? 'bg-amber-500 text-slate-950' : 'hover:bg-[var(--surface-hover)] text-[var(--text)]'}`}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H2a2 2 0 110-4h.09A1.65 1.65 0 004.6 8a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 3.6 1.65 1.65 0 0010 2.09V2a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 8v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -149,9 +149,9 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       />
 
       {panel === 'settings' && (
-        <div className="no-print border-b border-white/10 bg-[#171a21] px-4 py-4 space-y-4">
+        <div className="no-print border-b border-[var(--line)] bg-[var(--panel)] px-4 py-4 space-y-4">
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-2">Що показувати</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Що показувати</div>
             <div className="flex gap-2">
               <Toggle
                 label="Текст"
@@ -171,11 +171,11 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
                 за умовчанням
               </Button>
             </div>
-            <div className="text-[11px] text-slate-500 mt-1.5">{VIEW_HINT[view]}</div>
+            <div className="text-[11px] text-[var(--text-faint)] mt-1.5">{VIEW_HINT[view]}</div>
           </div>
 
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-2">Як показувати</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Як показувати</div>
             <div className="flex gap-2">
               <Button variant="chip" active={!showOriginal} className="flex-1"
                 onClick={() => setPrefs({ layout: 'parsed' })}>
@@ -186,7 +186,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
                 Точно як в оригіналі
               </Button>
             </div>
-            <div className="text-[11px] text-slate-500 mt-1.5">
+            <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
               {showOriginal
                 ? 'Вигляд, відступи й переноси — як у джерелі, символ у символ'
                 : 'Переноситься під ширину екрана, акорди прив’язані до складів'}
@@ -194,13 +194,13 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-2">Тональність</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Тональність</div>
             <div className="flex items-center gap-2">
               <Button onClick={() => shift(-1)} disabled={usingSetlistKey}
                 className="w-12 text-lg font-bold" aria-label="Нижче на півтон">−</Button>
               <div className="flex-1 text-center">
-                <div className="text-xl font-bold text-amber-400 leading-none">{currentKey}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">
+                <div className="text-xl font-bold text-[var(--accent)] leading-none">{currentKey}</div>
+                <div className="text-[10px] text-[var(--text-faint)] mt-0.5">
                   {usingSetlistKey ? 'задано сет-листом' : `оригінал ${song.originalKey}`}
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             </div>
             {!usingSetlistKey && transpose !== 0 && (
               <button onClick={() => setPersonal(song.id, { transpose: 0 })}
-                className="w-full text-center text-[11px] text-slate-500 hover:text-slate-300 mt-2">
+                className="w-full text-center text-[11px] text-[var(--text-faint)] hover:text-[var(--text)] mt-2">
                 повернути оригінальну тональність ({song.originalKey})
               </button>
             )}
@@ -217,8 +217,8 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
 
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <div className="text-xs font-medium text-slate-400 mb-1.5">
-                Каподастр: <span className="text-slate-200">{personal.capo || '—'}</span>
+              <div className="text-xs font-medium text-[var(--text-muted)] mb-1.5">
+                Каподастр: <span className="text-[var(--text)]">{personal.capo || '—'}</span>
               </div>
               <input type="range" min={0} max={7} value={personal.capo} className="w-full accent-amber-500"
                 onChange={(e) => setPersonal(song.id, { capo: +e.target.value })} />
@@ -226,9 +226,23 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-1.5">Швидкість автоскролу</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-1.5">Швидкість автоскролу</div>
             <input type="range" min={1} max={100} value={prefs.scrollSpeed} className="w-full accent-amber-500"
               onChange={(e) => setPrefs({ scrollSpeed: +e.target.value })} />
+          </div>
+
+          <div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Екран</div>
+            <div className="flex gap-2">
+              <Button variant="chip" active={prefs.theme === 'dark'} className="flex-1"
+                onClick={() => setPrefs({ theme: 'dark' })}>
+                🌙 Темний
+              </Button>
+              <Button variant="chip" active={prefs.theme === 'light'} className="flex-1"
+                onClick={() => setPrefs({ theme: 'light' })}>
+                ☀️ Світлий
+              </Button>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-1">
@@ -239,17 +253,17 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       )}
 
       {panel === 'note' && (
-        <div className="no-print border-b border-white/10 bg-[#171a21] px-4 py-4 space-y-3">
+        <div className="no-print border-b border-[var(--line)] bg-[var(--panel)] px-4 py-4 space-y-3">
           {song.notes.trim() && (
             <div>
-              <div className="text-xs font-medium text-slate-400 mb-1">Спільна нотатка (бачать усі)</div>
-              <div className="text-sm text-slate-300 whitespace-pre-wrap rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
+              <div className="text-xs font-medium text-[var(--text-muted)] mb-1">Спільна нотатка (бачать усі)</div>
+              <div className="text-sm text-[var(--text)] whitespace-pre-wrap rounded-xl bg-[var(--surface-2)] border border-[var(--line)] px-3 py-2">
                 {song.notes}
               </div>
             </div>
           )}
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-1">
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-1">
               Моя нотатка — бачиш тільки ти{me ? `, ${me.name}` : ''}
             </div>
             <textarea rows={4} className={inputClass + ' resize-none'}
@@ -290,15 +304,15 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       </div>
 
       {/* Нижня панель: розмір тексту + автоскрол — те, що потрібно під час гри */}
-      <div className="no-print sticky bottom-0 bg-[#0f1115]/90 backdrop-blur-xl border-t border-white/10 px-3 py-2.5 pb-safe">
+      <div className="no-print sticky bottom-0 bg-[var(--bg)]/90 backdrop-blur-xl border-t border-[var(--line)] px-3 py-2.5 pb-safe">
         <div className="flex items-center gap-2">
           <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
             className="w-12 text-lg font-bold" aria-label="Дрібніший текст">
             A−
           </Button>
           <div className="flex-1 text-center">
-            <div className="text-xl font-bold text-amber-400 leading-none">{fontSize}</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">розмір тексту</div>
+            <div className="text-xl font-bold text-[var(--accent)] leading-none">{fontSize}</div>
+            <div className="text-[10px] text-[var(--text-faint)] mt-0.5">розмір тексту</div>
           </div>
           <Button onClick={() => zoom(1)} disabled={fontSize >= zoomMax}
             className="w-12 text-lg font-bold" aria-label="Більший текст">
@@ -330,10 +344,10 @@ function Toggle({ label, on, disabled, onClick }: {
       className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm border transition
         active:scale-[0.97] disabled:opacity-45 ${
         on ? 'bg-amber-500 text-slate-950 border-amber-400 font-semibold'
-           : 'bg-white/[0.05] text-slate-300 border-white/10 hover:bg-white/[0.1]'}`}
+           : 'bg-[var(--surface-2)] text-[var(--text)] border-[var(--line)] hover:bg-[var(--surface-hover)]'}`}
     >
       <span className={`w-4 h-4 rounded grid place-items-center text-[11px] font-bold ${
-        on ? 'bg-slate-950/20' : 'border border-white/25'}`}>
+        on ? 'bg-slate-950/20' : 'border border-[var(--line-strong)]'}`}>
         {on ? '✓' : ''}
       </span>
       {label}

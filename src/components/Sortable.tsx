@@ -75,8 +75,8 @@ export function DragHandle({ attributes, listeners }: DragHandleProps) {
       {...attributes}
       {...listeners}
       aria-label="Перетягнути"
-      className="shrink-0 w-9 h-9 grid place-items-center rounded-lg text-slate-500
-                 hover:text-slate-200 hover:bg-white/10 cursor-grab active:cursor-grabbing touch-none"
+      className="shrink-0 w-9 h-9 grid place-items-center rounded-lg text-[var(--text-faint)]
+                 hover:text-[var(--text)] hover:bg-[var(--surface-hover)] cursor-grab active:cursor-grabbing touch-none"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <circle cx="9" cy="6" r="1.7" /><circle cx="15" cy="6" r="1.7" />

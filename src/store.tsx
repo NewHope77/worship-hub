@@ -13,6 +13,7 @@ export const DEFAULT_PREFS: MemberPrefs = {
   showCapo: true,
   layout: 'parsed',
   rawFontSize: 13,
+  theme: 'dark',
 }
 
 interface Store {
@@ -89,6 +90,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const primary = INSTRUMENTS.find((i) => i.id === me.instruments[0])
     return { ...DEFAULT_PREFS, viewMode: primary?.defaultView ?? 'chords' }
   }, [me, data.prefs])
+
+  // Тема живе на <html>, щоб фон сторінки й системні елементи змінювались разом
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('theme-light', prefs.theme === 'light')
+    root.classList.toggle('theme-dark', prefs.theme !== 'light')
+    const meta = document.querySelector('meta[name="theme-color"]')
+    meta?.setAttribute('content', prefs.theme === 'light' ? '#f6f7f9' : '#0f1115')
+  }, [prefs.theme])
 
   const store: Store = {
     data,

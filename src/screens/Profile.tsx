@@ -43,17 +43,17 @@ export default function Profile() {
         <div className="flex-1 px-3 py-3 space-y-1.5">
           {data.members.map((m) => (
             <button key={m.id} onClick={() => setEditing(m)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.09] text-left">
+              className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] hover:bg-[var(--surface-hover)] text-left">
               <Avatar member={m} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold flex items-center gap-1.5">
                   {m.name || 'Без імені'}
-                  {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/15 px-1.5 py-0.5 rounded">лідер</span>}
-                  {m.id === meId && <span className="text-[10px] text-slate-500">— це ти</span>}
+                  {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-amber-400/15 px-1.5 py-0.5 rounded">лідер</span>}
+                  {m.id === meId && <span className="text-[10px] text-[var(--text-faint)]">— це ти</span>}
                 </div>
                 <InstrumentTags member={m} />
               </div>
-              <span className="text-slate-600 text-sm">змінити</span>
+              <span className="text-[var(--text-faint)] text-sm">змінити</span>
             </button>
           ))}
         </div>
@@ -76,7 +76,7 @@ export default function Profile() {
         </div>
 
         <div className="space-y-3">
-          <div className="font-semibold text-sm text-slate-300">Мої налаштування</div>
+          <div className="font-semibold text-sm text-[var(--text)]">Мої налаштування</div>
 
           <Field label="Що показувати в піснях за замовчуванням"
             hint={primary ? `для інструмента «${primary.name}» зазвичай найзручніше` : undefined}>
@@ -92,7 +92,7 @@ export default function Profile() {
                 {prefs.viewMode !== 'text' ? '✓ ' : ''}Акорди
               </Button>
             </div>
-            <div className="text-[11px] text-slate-500 mt-1.5">
+            <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
               {prefs.viewMode === 'chords' ? 'Акорди над словами'
                 : prefs.viewMode === 'text' ? 'Тільки слова'
                 : 'Тільки акорди — на своїх місцях над складами'}
@@ -109,25 +109,43 @@ export default function Profile() {
               onChange={(e) => setPrefs({ scrollSpeed: +e.target.value })} />
           </Field>
 
+          <Field label="Екран">
+            <div className="flex gap-2">
+              <Button variant="chip" active={prefs.theme === 'dark'} className="flex-1"
+                onClick={() => setPrefs({ theme: 'dark' })}>
+                🌙 Темний
+              </Button>
+              <Button variant="chip" active={prefs.theme === 'light'} className="flex-1"
+                onClick={() => setPrefs({ theme: 'light' })}>
+                ☀️ Світлий
+              </Button>
+            </div>
+            <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
+              {prefs.theme === 'dark'
+                ? 'Темний не сліпить на сцені й у напівтемряві'
+                : 'Світлий краще читається при яскравому світлі й на вулиці'}
+            </div>
+          </Field>
+
           <label className="flex items-center gap-3 py-1 cursor-pointer">
             <input type="checkbox" checked={prefs.showCapo} className="w-4 h-4 accent-amber-500"
               onChange={(e) => setPrefs({ showCapo: e.target.checked })} />
-            <span className="text-sm text-slate-300">Показувати підказку каподастра</span>
+            <span className="text-sm text-[var(--text)]">Показувати підказку каподастра</span>
           </label>
         </div>
 
         <div className="space-y-2 pt-2">
           <Button className="w-full !justify-between" onClick={() => setShowMembers(true)}>
             <span>Учасники групи</span>
-            <span className="text-slate-500 text-sm">{data.members.length} →</span>
+            <span className="text-[var(--text-faint)] text-sm">{data.members.length} →</span>
           </Button>
           <Button className="w-full !justify-between" onClick={signOut}>
             <span>Вийти / змінити учасника</span>
-            <span className="text-slate-500">→</span>
+            <span className="text-[var(--text-faint)]">→</span>
           </Button>
         </div>
 
-        <div className="text-[11px] text-slate-600 leading-relaxed pt-4 border-t border-white/5">
+        <div className="text-[11px] text-[var(--text-faint)] leading-relaxed pt-4 border-t border-[var(--line-soft)]">
           Дані зараз зберігаються на цьому пристрої. Наступний крок — спільна база,
           щоб пісні й сети автоматично бачили всі учасники.
         </div>
@@ -198,7 +216,7 @@ function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={draft.isLeader} className="w-4 h-4 accent-amber-500"
             onChange={(e) => setDraft({ ...draft, isLeader: e.target.checked })} />
-          <span className="text-sm text-slate-300">Лідер прославлення</span>
+          <span className="text-sm text-[var(--text)]">Лідер прославлення</span>
         </label>
 
         {exists && data.members.length > 1 && (

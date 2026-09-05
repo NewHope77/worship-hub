@@ -18,13 +18,13 @@ function SectionHeading({ section, repeat }: { section: Section; repeat: number 
   const meta = SECTION_KINDS[section.kind]
   return (
     <div className="flex items-center gap-2 mt-6 mb-2 first:mt-0">
-      <span className={`text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${meta.color} bg-white/[0.03]`}>
+      <span className={`section-badge text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${meta.color} bg-[var(--surface-1)]`}>
         {section.label || meta.label}
       </span>
       {repeat !== null && (
-        <span className="text-[11px] text-slate-500">×{repeat}</span>
+        <span className="text-[11px] text-[var(--text-faint)]">×{repeat}</span>
       )}
-      <span className="flex-1 h-px bg-white/5" />
+      <span className="flex-1 h-px bg-[var(--surface-2)]" />
     </div>
   )
 }
@@ -46,7 +46,7 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: 
           if (!showChords) return null
           // Рядок самих акордів (вступ, програш) — рівним рядком, не «сходинками»
           return (
-            <div key={i} className="flex flex-wrap gap-x-5 gap-y-0.5 font-mono font-bold text-amber-400 text-[0.92em] leading-relaxed">
+            <div key={i} className="flex flex-wrap gap-x-5 gap-y-0.5 font-mono font-bold text-[var(--accent)] text-[0.92em] leading-relaxed">
               {line.map((t, j) => t.chord && (
                 <span key={j}>{transposeChord(t.chord, transpose, targetKey)}</span>
               ))}

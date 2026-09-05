@@ -123,10 +123,10 @@ export default function SongEditor({ song, onDone }: Props) {
         {pasteOpen ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4 space-y-4">
             <div>
-              <div className="font-semibold text-amber-300 mb-1">Додати пісню</div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <div className="font-semibold text-[var(--accent)] mb-1">Додати пісню</div>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                 Візьми пісню з файлу або встав текстом. Розуміє{' '}
-                <b className="text-slate-300">звичайний формат</b>, де акорди стоять рядком над
+                <b className="text-[var(--text)]">звичайний формат</b>, де акорди стоять рядком над
                 словами — вони самі стануть на потрібні склади. Секції поріжуться за заголовками
                 («1 куплет», «Припев», «Бридж», «Проигрыш») або за порожніми рядками.
               </p>
@@ -143,7 +143,7 @@ export default function SongEditor({ song, onDone }: Props) {
                 if (f) void handleFile(f)
               }}
               className={`rounded-xl border-2 border-dashed p-4 text-center transition ${
-                dragOver ? 'border-amber-400 bg-amber-400/10' : 'border-white/15 bg-white/[0.03]'
+                dragOver ? 'border-amber-400 bg-amber-400/10' : 'border-[var(--line-strong)] bg-[var(--surface-1)]'
               }`}
             >
               <input
@@ -158,13 +158,13 @@ export default function SongEditor({ song, onDone }: Props) {
                 }}
               />
               {importing ? (
-                <div className="text-sm text-amber-300 py-2">Читаю файл…</div>
+                <div className="text-sm text-[var(--accent)] py-2">Читаю файл…</div>
               ) : (
                 <>
                   <Button onClick={() => fileRef.current?.click()} className="mb-2">
                     📄 Вибрати файл
                   </Button>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[11px] text-[var(--text-faint)]">
                     PDF, DOCX, TXT — або перетягни файл сюди
                   </div>
                 </>
@@ -178,9 +178,9 @@ export default function SongEditor({ song, onDone }: Props) {
             )}
 
             <div className="flex items-center gap-3">
-              <span className="flex-1 h-px bg-white/10" />
-              <span className="text-[11px] text-slate-500 uppercase tracking-wider">або текстом</span>
-              <span className="flex-1 h-px bg-white/10" />
+              <span className="flex-1 h-px bg-[var(--surface-hover)]" />
+              <span className="text-[11px] text-[var(--text-faint)] uppercase tracking-wider">або текстом</span>
+              <span className="flex-1 h-px bg-[var(--surface-hover)]" />
             </div>
 
             <textarea rows={8} className={inputClass + ' font-mono text-sm whitespace-pre'}
@@ -254,7 +254,7 @@ export default function SongEditor({ song, onDone }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="font-semibold">Секції</div>
-            <div className="text-[11px] text-slate-500">затисни ⠿ і тягни, щоб змінити порядок</div>
+            <div className="text-[11px] text-[var(--text-faint)]">затисни ⠿ і тягни, щоб змінити порядок</div>
           </div>
 
           <SortableList
@@ -268,12 +268,12 @@ export default function SongEditor({ song, onDone }: Props) {
               {rows.map(({ key, section }) => (
                 <SortableRow key={key} id={key}>
                   {(handle) => (
-                    <div className="rounded-2xl bg-white/[0.04] border border-white/10 overflow-hidden">
-                      <div className="flex items-center gap-1 pl-1 pr-2 py-1.5 bg-white/[0.03]">
+                    <div className="rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] overflow-hidden">
+                      <div className="flex items-center gap-1 pl-1 pr-2 py-1.5 bg-[var(--surface-1)]">
                         <DragHandle {...handle} />
                         <input
                           className="flex-1 min-w-0 bg-transparent outline-none font-semibold text-sm py-1.5 px-1
-                                     focus:bg-white/5 rounded"
+                                     focus:bg-[var(--surface-2)] rounded"
                           value={section.label}
                           placeholder="Назва секції"
                           onChange={(e) =>
@@ -281,23 +281,23 @@ export default function SongEditor({ song, onDone }: Props) {
                         />
                         <select
                           className="bg-transparent text-[11px] font-bold uppercase tracking-wider outline-none
-                                     text-slate-400 cursor-pointer"
+                                     text-[var(--text-muted)] cursor-pointer"
                           value={section.kind}
                           onChange={(e) => patchSection(section.id, { kind: e.target.value as SectionKind })}
                         >
                           {Object.entries(SECTION_KINDS).map(([k, v]) => (
-                            <option key={k} value={k} className="bg-[#171a21]">{v.label}</option>
+                            <option key={k} value={k} className="bg-[var(--panel)]">{v.label}</option>
                           ))}
                         </select>
                         <button onClick={() => removeSection(section.id)} aria-label="Видалити секцію"
-                          className="shrink-0 w-8 h-8 grid place-items-center rounded-lg text-slate-600 hover:text-rose-400 hover:bg-rose-500/10">
+                          className="shrink-0 w-8 h-8 grid place-items-center rounded-lg text-[var(--text-faint)] hover:text-rose-400 hover:bg-rose-500/10">
                           ✕
                         </button>
                       </div>
                       <textarea
                         rows={Math.max(3, section.body.split('\n').length)}
                         className="w-full bg-transparent px-3 py-2.5 font-mono text-[13px] leading-relaxed
-                                   outline-none resize-none placeholder:text-slate-600"
+                                   outline-none resize-none placeholder:text-[var(--text-faint)]"
                         placeholder="[G]Слава Тобі, [D]Боже наш"
                         value={section.body}
                         onChange={(e) => patchSection(section.id, { body: e.target.value })}
@@ -334,13 +334,13 @@ function ArrangementEditor({ draft, patch }: { draft: Song; patch(p: Partial<Son
       <div className="flex items-center justify-between mb-2">
         <div className="font-semibold">Порядок виконання</div>
         <button
-          className="text-[11px] text-slate-500 hover:text-slate-300"
+          className="text-[11px] text-[var(--text-faint)] hover:text-[var(--text)]"
           onClick={() => patch({ arrangement: draft.sections.map((s) => s.id) })}
         >
           скинути
         </button>
       </div>
-      <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+      <p className="text-[11px] text-[var(--text-faint)] mb-2 leading-relaxed">
         Тут секція може повторюватись — напр. Куплет 1 → Приспів → Куплет 2 → Приспів → Приспів.
       </p>
 
@@ -352,15 +352,15 @@ function ArrangementEditor({ draft, patch }: { draft: Song; patch(p: Partial<Son
           {rows.map((r, i) => (
             <SortableRow key={r.key} id={r.key}>
               {(handle) => (
-                <div className="flex items-center gap-1 rounded-xl bg-white/[0.04] border border-white/10 pl-1 pr-2">
+                <div className="flex items-center gap-1 rounded-xl bg-[var(--surface-2)] border border-[var(--line)] pl-1 pr-2">
                   <DragHandle {...handle} />
-                  <span className="text-[11px] text-slate-600 font-mono w-5">{i + 1}</span>
+                  <span className="text-[11px] text-[var(--text-faint)] font-mono w-5">{i + 1}</span>
                   <span className={`flex-1 text-sm font-medium py-2.5 ${SECTION_KINDS[r.section!.kind].color.split(' ')[0]}`}>
                     {r.section!.label}
                   </span>
                   <button
                     onClick={() => patch({ arrangement: draft.arrangement.filter((_, j) => j !== i) })}
-                    className="w-8 h-8 grid place-items-center rounded-lg text-slate-600 hover:text-rose-400"
+                    className="w-8 h-8 grid place-items-center rounded-lg text-[var(--text-faint)] hover:text-rose-400"
                     aria-label="Прибрати з порядку"
                   >✕</button>
                 </div>

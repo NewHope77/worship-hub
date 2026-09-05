@@ -6,6 +6,8 @@ export type ViewMode = 'text' | 'chords' | 'grid'
 /** Показ пісні: розібраної на секції чи точно як в оригіналі */
 export type Layout = 'parsed' | 'original'
 
+export type Theme = 'dark' | 'light'
+
 export interface Instrument {
   id: InstrumentId
   name: string
@@ -33,6 +35,8 @@ export interface MemberPrefs {
   layout: Layout
   /** Кегль моноширинного тексту в режимі оригіналу */
   rawFontSize: number
+  /** Темний екран для сцени, світлий — для яскравого світла */
+  theme: Theme
 }
 
 export type SectionKind =

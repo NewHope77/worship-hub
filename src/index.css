@@ -5,11 +5,51 @@
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
-:root {
+/* Темна тема — за замовчуванням */
+:root, :root.theme-dark {
   color-scheme: dark;
   --bg: #0f1115;
   --panel: #171a21;
-  --line: #262b35;
+
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.07);
+  --surface-hover: rgba(255, 255, 255, 0.11);
+
+  --line: rgba(255, 255, 255, 0.10);
+  --line-soft: rgba(255, 255, 255, 0.05);
+  --line-strong: rgba(255, 255, 255, 0.22);
+
+  --text: #e7eaf0;
+  --text-muted: #97a0b0;
+  --text-faint: #6b7484;
+
+  --accent: #fbbf24;
+  --overlay: rgba(0, 0, 0, 0.6);
+}
+
+/* Світла тема — для яскравого світла й друку */
+:root.theme-light {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+
+  --surface-1: rgba(15, 23, 42, 0.025);
+  --surface-2: rgba(15, 23, 42, 0.05);
+  --surface-3: rgba(15, 23, 42, 0.07);
+  --surface-hover: rgba(15, 23, 42, 0.10);
+
+  --line: rgba(15, 23, 42, 0.12);
+  --line-soft: rgba(15, 23, 42, 0.07);
+  --line-strong: rgba(15, 23, 42, 0.28);
+
+  --text: #12161d;
+  --text-muted: #4a5364;
+  --text-faint: #78818f;
+
+  /* темніший бурштин, інакше акорди зникають на білому */
+  --accent: #b45309;
+  --overlay: rgba(15, 23, 42, 0.45);
 }
 
 html, body, #root { height: 100%; }
@@ -17,7 +57,7 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
-  color: #e7eaf0;
+  color: var(--text);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
@@ -46,7 +86,7 @@ body {
   font-size: 0.82em;
   letter-spacing: -0.01em;
   line-height: 1.5;
-  color: #fbbf24;
+  color: var(--accent);
   white-space: nowrap;
   /* гарантований просвіт, щоб два сусідні акорди не злипались */
   padding-right: 1em;
@@ -71,6 +111,15 @@ body {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/*
+ * Мітки секцій пофарбовані власними кольорами (приспів, міст тощо).
+ * На світлому тлі вони бліднуть, тому там їх притемнюємо одним правилом —
+ * інакше довелося б заводити по дві змінні на кожну секцію.
+ */
+:root.theme-light .section-badge {
+  filter: brightness(0.62) saturate(1.45);
+}
 
 @media print {
   body { background: #fff; color: #000; }

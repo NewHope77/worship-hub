@@ -39,7 +39,7 @@ export default function RawSong({ text, fontSize, showText, showChords }: Props)
           {pieces.map((p, j) => {
             if (p.isChord) {
               if (!showChords) return null
-              return <span key={j} className="text-amber-400 font-bold">{p.text}</span>
+              return <span key={j} className="text-[var(--accent)] font-bold">{p.text}</span>
             }
             if (!showText) {
               // Місце під словом лишаємо, щоб акорди не поїхали
@@ -56,7 +56,7 @@ export default function RawSong({ text, fontSize, showText, showChords }: Props)
 
   return (
     <pre
-      className="font-mono leading-snug text-slate-100 whitespace-pre"
+      className="font-mono leading-snug text-[var(--text)] whitespace-pre"
       style={{ fontSize, tabSize: 4 }}
     >
       {rendered.length ? rendered : ' '}

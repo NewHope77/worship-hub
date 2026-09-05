@@ -81,7 +81,7 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
               onHold={() => setMenuFor(s)}
             />
           ))}
-          <p className="text-center text-[11px] text-slate-600 pt-3 pb-1">
+          <p className="text-center text-[11px] text-[var(--text-faint)] pt-3 pb-1">
             Затисни пісню, щоб перейменувати чи видалити
           </p>
         </div>
@@ -128,18 +128,18 @@ function SongRow({ song, hasNote, onOpen, onHold }: {
     <button
       onClick={() => { if (!consumedClick()) onOpen() }}
       {...handlers}
-      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/10
-                 hover:bg-white/[0.09] active:scale-[0.99] transition text-left select-none touch-manipulation"
+      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)]
+                 hover:bg-[var(--surface-hover)] active:scale-[0.99] transition text-left select-none touch-manipulation"
     >
       <div className="min-w-0 flex-1">
         <div className="font-semibold truncate">{song.title}</div>
-        <div className="text-xs text-slate-500 truncate">
+        <div className="text-xs text-[var(--text-faint)] truncate">
           {song.author || '—'}
           {song.tempo ? ` · ${song.tempo} BPM` : ''}
           {hasNote ? ' · 📝 є нотатка' : ''}
         </div>
       </div>
-      <span className="shrink-0 font-mono font-bold text-amber-400 text-sm bg-amber-400/10 px-2 py-1 rounded-lg">
+      <span className="shrink-0 font-mono font-bold text-[var(--accent)] text-sm bg-amber-400/10 px-2 py-1 rounded-lg">
         {song.originalKey}
       </span>
     </button>

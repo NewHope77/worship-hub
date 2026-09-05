@@ -28,7 +28,7 @@ export default function App() {
   const [route, setRoute] = useState<Route>({ name: 'tabs' })
 
   if (!ready) {
-    return <div className="min-h-full grid place-items-center text-slate-600">завантаження…</div>
+    return <div className="min-h-full grid place-items-center text-[var(--text-faint)]">завантаження…</div>
   }
   if (!me) return <Login />
 
@@ -83,12 +83,12 @@ export default function App() {
         {tab === 'me' && <Profile />}
       </div>
 
-      <nav className="no-print fixed bottom-0 inset-x-0 z-40 bg-[#0f1115]/92 backdrop-blur-xl border-t border-white/10 pb-safe">
+      <nav className="no-print fixed bottom-0 inset-x-0 z-40 bg-[var(--bg)]/92 backdrop-blur-xl border-t border-[var(--line)] pb-safe">
         <div className="flex max-w-lg mx-auto">
           {TABS.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition active:scale-95 ${
-                tab === t.id ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                tab === t.id ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text)]'}`}>
               <span className="text-lg leading-none">{t.icon}</span>
               <span className="text-[11px] font-medium">{t.label}</span>
             </button>
