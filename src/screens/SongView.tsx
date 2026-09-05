@@ -3,6 +3,7 @@ import type { Song, ViewMode } from '../types'
 import { useStore, effectiveView } from '../store'
 import { transposeKey, semitonesBetween } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
+import RawSong from '../components/RawSong'
 import { transposeRaw, rawTextOnly, rawChordsOnly, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
@@ -247,12 +248,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
               усі символи однакової ширини, тож акорд лишається над своїм
               складом на будь-якому масштабі.
             */}
-            <pre
-              className="font-mono leading-snug text-slate-100 whitespace-pre"
-              style={{ fontSize: prefs.rawFontSize, tabSize: 4 }}
-            >
-              {rawShown}
-            </pre>
+            <RawSong text={rawShown} fontSize={prefs.rawFontSize} />
           </div>
         ) : (
           <div className="px-4 pt-4">

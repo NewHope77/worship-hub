@@ -44,8 +44,9 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: 
         const onlyChords = lineHasChords(line) && line.every((t) => !t.text.trim())
         if (onlyChords) {
           if (!showChords) return null
+          // Рядок самих акордів (вступ, програш) — рівним рядком, не «сходинками»
           return (
-            <div key={i} className="flex flex-wrap gap-x-4 gap-y-1 py-1 font-mono font-bold text-amber-400 text-[0.9em]">
+            <div key={i} className="flex flex-wrap gap-x-5 gap-y-0.5 font-mono font-bold text-amber-400 text-[0.92em] leading-relaxed">
               {line.map((t, j) => t.chord && (
                 <span key={j}>{transposeChord(t.chord, transpose, targetKey)}</span>
               ))}

@@ -23,6 +23,11 @@ function tokensOf(line: string): { text: string; col: number }[] {
   return out
 }
 
+/** Чи окремий токен є акордом */
+export function isChordToken(token: string): boolean {
+  return CHORD_TOKEN.test(token)
+}
+
 /** Рядок складається лише з акордів (і службових позначок) */
 export function isChordLine(line: string): boolean {
   if (!line.trim()) return false
