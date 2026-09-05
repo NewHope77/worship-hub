@@ -29,7 +29,6 @@ export interface Member {
 export interface MemberPrefs {
   viewMode: ViewMode
   fontSize: number
-  scrollSpeed: number
   showCapo: boolean
   /** Який показ відкривати за замовчуванням */
   layout: Layout

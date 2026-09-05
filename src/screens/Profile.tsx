@@ -104,11 +104,6 @@ export default function Profile() {
               onChange={(e) => setPrefs({ fontSize: +e.target.value })} />
           </Field>
 
-          <Field label={`Швидкість автоскролу: ${prefs.scrollSpeed}`}>
-            <input type="range" min={1} max={100} value={prefs.scrollSpeed} className="w-full accent-amber-500"
-              onChange={(e) => setPrefs({ scrollSpeed: +e.target.value })} />
-          </Field>
-
           <Field label="Екран">
             <div className="flex gap-2">
               <Button variant="chip" active={prefs.theme === 'dark'} className="flex-1"

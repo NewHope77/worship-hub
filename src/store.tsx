@@ -9,7 +9,6 @@ const MEMBER_KEY = 'worship-hub:me'
 export const DEFAULT_PREFS: MemberPrefs = {
   viewMode: 'chords',
   fontSize: 17,
-  scrollSpeed: 30,
   showCapo: true,
   layout: 'parsed',
   rawFontSize: 13,

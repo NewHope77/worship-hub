@@ -11,6 +11,9 @@ import RawSong from '../components/RawSong'
 import { transposeRaw, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
+/** Пікселів за секунду — спокійний темп читання під час гри */
+const AUTOSCROLL_SPEED = 30
+
 const VIEW_HINT: Record<ViewMode, string> = {
   chords: 'Акорди над словами',
   text:   'Тільки слова, без акордів',
@@ -58,8 +61,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
     const step = (now: number) => {
       const dt = now - last
       last = now
-      // scrollSpeed 1..100 → приблизно 5..90 px/с
-      el.scrollTop += (prefs.scrollSpeed * 0.9 + 4) * (dt / 1000)
+      el.scrollTop += AUTOSCROLL_SPEED * (dt / 1000)
       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) {
         setScrolling(false)
         return
@@ -68,7 +70,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
     }
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
-  }, [scrolling, prefs.scrollSpeed])
+  }, [scrolling])
 
   // Не даємо екрану згаснути під час гри
   useEffect(() => {
@@ -247,12 +249,6 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
               <input type="range" min={0} max={7} value={personal.capo} className="w-full accent-amber-500"
                 onChange={(e) => setPersonal(song.id, { capo: +e.target.value })} />
             </div>
-          </div>
-
-          <div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mb-1.5">Швидкість автоскролу</div>
-            <input type="range" min={1} max={100} value={prefs.scrollSpeed} className="w-full accent-amber-500"
-              onChange={(e) => setPrefs({ scrollSpeed: +e.target.value })} />
           </div>
 
           <div>
