@@ -3,16 +3,22 @@ import type { Song } from '../types'
 import { useStore } from '../store'
 import { stripChords } from '../chordpro/parse'
 import { TopBar, Button, Empty, inputClass } from '../components/ui'
+import { useLongPress } from '../components/LongPress'
+import ActionSheet from '../components/ActionSheet'
 
 interface Props {
   onOpen(song: Song): void
   onNew(): void
+  onEdit(song: Song): void
 }
 
-export default function SongList({ onOpen, onNew }: Props) {
-  const { data, personalFor } = useStore()
+export default function SongList({ onOpen, onNew, onEdit }: Props) {
+  const { data, personalFor, deleteSong } = useStore()
   const [q, setQ] = useState('')
   const [tag, setTag] = useState<string | null>(null)
+  // Пісня, на якій затримали палець — для неї показуємо меню дій
+  const [menuFor, setMenuFor] = useState<Song | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<Song | null>(null)
 
   const allTags = useMemo(() => {
     const set = new Set<string>()
@@ -66,28 +72,76 @@ export default function SongList({ onOpen, onNew }: Props) {
         />
       ) : (
         <div className="flex-1 px-3 py-2 space-y-1.5">
-          {filtered.map((s) => {
-            const p = personalFor(s.id)
-            return (
-              <button key={s.id} onClick={() => onOpen(s)}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/10
-                           hover:bg-white/[0.09] active:scale-[0.99] transition text-left">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold truncate">{s.title}</div>
-                  <div className="text-xs text-slate-500 truncate">
-                    {s.author || '—'}
-                    {s.tempo ? ` · ${s.tempo} BPM` : ''}
-                    {p.note.trim() ? ' · 📝 є нотатка' : ''}
-                  </div>
-                </div>
-                <span className="shrink-0 font-mono font-bold text-amber-400 text-sm bg-amber-400/10 px-2 py-1 rounded-lg">
-                  {s.originalKey}
-                </span>
-              </button>
-            )
-          })}
+          {filtered.map((s) => (
+            <SongRow
+              key={s.id}
+              song={s}
+              hasNote={personalFor(s.id).note.trim().length > 0}
+              onOpen={() => onOpen(s)}
+              onHold={() => setMenuFor(s)}
+            />
+          ))}
+          <p className="text-center text-[11px] text-slate-600 pt-3 pb-1">
+            Затисни пісню, щоб перейменувати чи видалити
+          </p>
         </div>
       )}
+
+      {menuFor && (
+        <ActionSheet
+          title={menuFor.title}
+          subtitle={menuFor.author || undefined}
+          onClose={() => setMenuFor(null)}
+          actions={[
+            { label: 'Відкрити', icon: '🎵', onClick: () => onOpen(menuFor) },
+            { label: 'Редагувати', icon: '✏️', onClick: () => onEdit(menuFor) },
+            { label: 'Видалити', icon: '🗑', danger: true, onClick: () => setConfirmDelete(menuFor) },
+          ]}
+        />
+      )}
+
+      {confirmDelete && (
+        <ActionSheet
+          title={`Видалити «${confirmDelete.title}»?`}
+          subtitle="Пісня зникне в усіх сет-листах. Скасувати не вийде."
+          onClose={() => setConfirmDelete(null)}
+          actions={[
+            {
+              label: 'Так, видалити',
+              icon: '🗑',
+              danger: true,
+              onClick: () => { deleteSong(confirmDelete.id); setMenuFor(null) },
+            },
+          ]}
+        />
+      )}
     </div>
+  )
+}
+
+/** Рядок списку: тап відкриває, довге натискання — меню дій */
+function SongRow({ song, hasNote, onOpen, onHold }: {
+  song: Song; hasNote: boolean; onOpen(): void; onHold(): void
+}) {
+  const { handlers, consumedClick } = useLongPress(onHold)
+  return (
+    <button
+      onClick={() => { if (!consumedClick()) onOpen() }}
+      {...handlers}
+      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04] border border-white/10
+                 hover:bg-white/[0.09] active:scale-[0.99] transition text-left select-none touch-manipulation"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold truncate">{song.title}</div>
+        <div className="text-xs text-slate-500 truncate">
+          {song.author || '—'}
+          {song.tempo ? ` · ${song.tempo} BPM` : ''}
+          {hasNote ? ' · 📝 є нотатка' : ''}
+        </div>
+      </div>
+      <span className="shrink-0 font-mono font-bold text-amber-400 text-sm bg-amber-400/10 px-2 py-1 rounded-lg">
+        {song.originalKey}
+      </span>
+    </button>
   )
 }

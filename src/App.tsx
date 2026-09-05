@@ -74,6 +74,7 @@ export default function App() {
           <SongList
             onOpen={(s) => setRoute({ name: 'song', songId: s.id, setlistTranspose: null })}
             onNew={() => setRoute({ name: 'editSong', songId: null })}
+            onEdit={(s) => setRoute({ name: 'editSong', songId: s.id })}
           />
         )}
         {tab === 'setlists' && (
