@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --panel: #171a21;
+  --line: #262b35;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: #e7eaf0;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Безпечні зони iPhone */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
+/* Рядок пісні: акорд стоїть над складом і не розсуває текст по горизонталі */
+.chord-line { line-height: 2.55; }
+.chord-slot { position: relative; white-space: pre-wrap; }
+.chord-slot > .chord {
+  position: absolute;
+  top: -1.35em;
+  left: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82em;
+  letter-spacing: -0.01em;
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+@media print {
+  body { background: #fff; color: #000; }
+  .no-print { display: none !important; }
+  .chord-slot > .chord { color: #000; }
+}
