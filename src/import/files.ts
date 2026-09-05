@@ -5,8 +5,10 @@
  */
 
 import { mergeSuffixLines } from '../chordpro/fromPlainText'
+import { readImage } from './image'
+import type { OcrProgress } from './image'
 
-export type ImportKind = 'txt' | 'pdf' | 'docx'
+export type ImportKind = 'txt' | 'pdf' | 'docx' | 'image'
 
 export interface ImportedFile {
   /** Готовий текст, який далі йде у splitIntoSections */
@@ -18,6 +20,7 @@ export interface ImportedFile {
 }
 
 const TEXT_EXT = ['txt', 'text', 'chopro', 'cho', 'crd', 'pro', 'onsong', 'md', 'chordpro']
+const IMAGE_EXT = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp']
 
 export function extOf(name: string): string {
   const m = /\.([a-z0-9]+)$/i.exec(name.trim())
@@ -35,7 +38,7 @@ export function titleFromFileName(name: string): string {
 /** Чи вміємо ми читати такий файл */
 export function isSupported(name: string): boolean {
   const e = extOf(name)
-  return e === 'pdf' || e === 'docx' || TEXT_EXT.includes(e)
+  return e === 'pdf' || e === 'docx' || TEXT_EXT.includes(e) || IMAGE_EXT.includes(e)
 }
 
 /* ── PDF ──────────────────────────────────────────────────────────── */
@@ -300,9 +303,23 @@ async function readDocx(file: File): Promise<string> {
 
 /* ── Точка входу ──────────────────────────────────────────────────── */
 
-export async function readSongFile(file: File): Promise<ImportedFile> {
+export async function readSongFile(
+  file: File,
+  onProgress?: (p: OcrProgress) => void,
+): Promise<ImportedFile> {
   const ext = extOf(file.name)
   const title = titleFromFileName(file.name)
+
+  if (IMAGE_EXT.includes(ext) || file.type.startsWith('image/')) {
+    const text = await readImage(file, onProgress)
+    if (!text.trim()) {
+      throw new Error(
+        'На знімку не вдалося прочитати текст. Спробуй зняти рівніше, ближче ' +
+        'і при кращому світлі — або зроби скріншот замість фото.',
+      )
+    }
+    return { text: mergeSuffixLines(text), title, kind: 'image', pages: 1 }
+  }
 
   if (ext === 'pdf') {
     const { text, pages, title: pdfTitle } = await readPdf(file)
@@ -329,11 +346,10 @@ export async function readSongFile(file: File): Promise<ImportedFile> {
   if (ext === 'doc') {
     throw new Error('Старий формат .doc не підтримується — пересохрани як .docx або .txt.')
   }
-  if (['png', 'jpg', 'jpeg', 'heic', 'webp'].includes(ext)) {
-    throw new Error(
-      'Це зображення. Розпізнавання з фото ненадійне саме для акордів — ' +
-      'вони «поїдуть» відносно складів. Краще скопіювати текст.',
-    )
+  if (ext === 'heic') {
+    throw new Error('Формат HEIC браузер не читає — пересохрани знімок у JPG чи PNG.')
   }
-  throw new Error(`Формат .${ext || '?'} не підтримується. Підійдуть PDF, DOCX або TXT.`)
+  throw new Error(
+    `Формат .${ext || '?'} не підтримується. Підійдуть PDF, DOCX, TXT або знімок екрана.`,
+  )
 }

@@ -30,6 +30,7 @@ export default function SongEditor({ song, onDone }: Props) {
   const [pasteText, setPasteText] = useState('')
   const [importError, setImportError] = useState('')
   const [importing, setImporting] = useState(false)
+  const [progress, setProgress] = useState<{ stage: string; percent: number } | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [tagInput, setTagInput] = useState(draft.tags.join(', '))
@@ -79,13 +80,15 @@ export default function SongEditor({ song, onDone }: Props) {
   const handleFile = async (file: File) => {
     setImportError('')
     setImporting(true)
+    setProgress(null)
     try {
-      const imported = await readSongFile(file)
+      const imported = await readSongFile(file, setProgress)
       applySections(splitIntoSections(imported.text), imported.title, imported.text)
     } catch (e) {
       setImportError(e instanceof Error ? e.message : String(e))
     } finally {
       setImporting(false)
+      setProgress(null)
     }
   }
 
@@ -149,7 +152,7 @@ export default function SongEditor({ song, onDone }: Props) {
               <input
                 ref={fileRef}
                 type="file"
-                accept=".pdf,.docx,.txt,.text,.md,.chopro,.cho,.crd,.pro,.onsong,text/plain,application/pdf"
+                accept=".pdf,.docx,.txt,.text,.md,.chopro,.cho,.crd,.pro,.onsong,text/plain,application/pdf,image/*"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0]
@@ -158,14 +161,30 @@ export default function SongEditor({ song, onDone }: Props) {
                 }}
               />
               {importing ? (
-                <div className="text-sm text-[var(--accent)] py-2">Читаю файл…</div>
+                <div className="py-2">
+                  <div className="text-sm text-[var(--accent)]">
+                    {progress ? progress.stage : 'Читаю файл'}…
+                  </div>
+                  {progress && (
+                    <>
+                      <div className="h-1.5 rounded-full bg-[var(--surface-3)] overflow-hidden mt-2">
+                        <div className="h-full bg-[var(--accent)] transition-[width] duration-300"
+                          style={{ width: `${Math.round(progress.percent)}%` }} />
+                      </div>
+                      <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
+                        Розпізнавання зі знімка триває довше — перший раз ще
+                        й вантажиться словник
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <>
                   <Button onClick={() => fileRef.current?.click()} className="mb-2">
                     📄 Вибрати файл
                   </Button>
                   <div className="text-[11px] text-[var(--text-faint)]">
-                    PDF, DOCX, TXT — або перетягни файл сюди
+                    PDF, DOCX, TXT, фото чи скріншот — або перетягни сюди
                   </div>
                 </>
               )}
