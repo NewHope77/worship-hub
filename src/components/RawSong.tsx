@@ -34,16 +34,25 @@ export default function RawSong({ text, fontSize, showText, showChords }: Props)
       if (!showChords && hasChord && !hasWords) return
       if (!showText && !hasChord && hasWords) return
 
+      // Текст вимкнено — акорди стискаються в компактний рядок: тримати
+      // порожні місця під невидимими словами немає сенсу
+      if (!showText) {
+        out.push(
+          <div key={i} className="flex flex-wrap items-baseline gap-x-4">
+            {pieces.filter((p) => p.isChord).map((p, j) => (
+              <span key={j} className="text-[var(--accent)] font-bold">{p.text}</span>
+            ))}
+          </div>,
+        )
+        return
+      }
+
       out.push(
         <div key={i}>
           {pieces.map((p, j) => {
             if (p.isChord) {
               if (!showChords) return null
               return <span key={j} className="text-[var(--accent)] font-bold">{p.text}</span>
-            }
-            if (!showText) {
-              // Місце під словом лишаємо, щоб акорди не поїхали
-              return <span key={j} style={{ visibility: 'hidden' }}>{p.text}</span>
             }
             return <span key={j}>{p.text}</span>
           })}

@@ -71,6 +71,21 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly, se
         // інакше від нього лишалася б порожня смуга
         if (chordsOnly && !lineHasChords(line)) return null
 
+        // Текст вимкнено: акорди збираються компактно зліва, але розбивка
+        // по рядках лишається — інакше вони розповзались би по всій ширині,
+        // повторюючи довжину невидимих слів
+        if (chordsOnly) {
+          return (
+            <div key={i} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 leading-relaxed">
+              {line.map((t, j) => t.chord && (
+                <span key={j} className="font-mono font-bold text-[var(--accent)]">
+                  {transposeChord(t.chord, transpose, targetKey)}
+                </span>
+              ))}
+            </div>
+          )
+        }
+
         // Рахуємо, скільки акордів і символів тексту вже пройшли — за цим
         // потім знаходимо саме той акорд, по якому тицьнули
         let chordNo = -1
