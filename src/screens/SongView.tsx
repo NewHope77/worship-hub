@@ -5,10 +5,16 @@ import { transposeKey, semitonesBetween } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
-const VIEW_LABEL: Record<ViewMode, { label: string; hint: string }> = {
-  text:   { label: 'Текст',  hint: 'Тільки слова, без акордів' },
-  chords: { label: 'Акорди', hint: 'Акорди над словами' },
-  grid:   { label: 'Сітка',  hint: 'Послідовність акордів без тексту' },
+const VIEW_HINT: Record<ViewMode, string> = {
+  chords: 'Акорди над словами',
+  text:   'Тільки слова, без акордів',
+  grid:   'Тільки акорди — стоять там само, де були над складами',
+}
+
+/** Два тумблери «текст» і «акорди» вкладаються у три можливі режими */
+function toView(showText: boolean, showChords: boolean): ViewMode {
+  if (showText && showChords) return 'chords'
+  return showText ? 'text' : 'grid'
 }
 
 interface Props {
@@ -116,20 +122,27 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       {panel === 'settings' && (
         <div className="no-print border-b border-white/10 bg-[#171a21] px-4 py-4 space-y-4">
           <div>
-            <div className="text-xs font-medium text-slate-400 mb-2">Режим</div>
+            <div className="text-xs font-medium text-slate-400 mb-2">Що показувати</div>
             <div className="flex gap-2">
-              {(['text', 'chords', 'grid'] as ViewMode[]).map((v) => (
-                <Button key={v} variant="chip" active={view === v}
-                  onClick={() => setPersonal(song.id, { viewMode: v === prefs.viewMode ? null : v })}>
-                  {VIEW_LABEL[v].label}
-                </Button>
-              ))}
+              <Toggle
+                label="Текст"
+                on={view !== 'grid'}
+                // Вимкнути можна лише щось одне — інакше сторінка буде порожня
+                disabled={view === 'text'}
+                onClick={() => setPersonal(song.id, { viewMode: toView(view === 'grid', true) })}
+              />
+              <Toggle
+                label="Акорди"
+                on={view !== 'text'}
+                disabled={view === 'grid'}
+                onClick={() => setPersonal(song.id, { viewMode: toView(true, view === 'text') })}
+              />
               <Button variant="chip" className="ml-auto" onClick={() => setPrefs({ viewMode: view })}
-                title="Зробити цей режим типовим для всіх пісень">
+                title="Зробити це типовим для всіх пісень">
                 за умовчанням
               </Button>
             </div>
-            <div className="text-[11px] text-slate-500 mt-1.5">{VIEW_LABEL[view].hint}</div>
+            <div className="text-[11px] text-slate-500 mt-1.5">{VIEW_HINT[view]}</div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -221,6 +234,29 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         )}
       </div>
     </div>
+  )
+}
+
+function Toggle({ label, on, disabled, onClick }: {
+  label: string; on: boolean; disabled?: boolean; onClick(): void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={on}
+      title={disabled ? 'Щось одне має лишитись увімкненим' : undefined}
+      className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm border transition
+        active:scale-[0.97] disabled:opacity-45 ${
+        on ? 'bg-amber-500 text-slate-950 border-amber-400 font-semibold'
+           : 'bg-white/[0.05] text-slate-300 border-white/10 hover:bg-white/[0.1]'}`}
+    >
+      <span className={`w-4 h-4 rounded grid place-items-center text-[11px] font-bold ${
+        on ? 'bg-slate-950/20' : 'border border-white/25'}`}>
+        {on ? '✓' : ''}
+      </span>
+      {label}
+    </button>
   )
 }
 

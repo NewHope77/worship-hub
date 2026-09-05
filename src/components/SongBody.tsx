@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import type { Section, ViewMode } from '../types'
 import { SECTION_KINDS } from '../types'
-import { chordSequence, parseBody, lineHasChords } from '../chordpro/parse'
-import { transposeChord, isChord } from '../chordpro/transpose'
+import { parseBody, lineHasChords } from '../chordpro/parse'
+import { transposeChord } from '../chordpro/transpose'
 
 interface Props {
   sections: Section[]
@@ -29,13 +29,13 @@ function SectionHeading({ section, repeat }: { section: Section; repeat: number 
   )
 }
 
-/** Текст + акорди над словами */
-function ChordedSection({ body, transpose, targetKey, showChords }: {
-  body: string; transpose: number; targetKey: string; showChords: boolean
+/** Текст + акорди над словами; `chordsOnly` ховає текст, лишаючи акорди на місцях */
+function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: {
+  body: string; transpose: number; targetKey: string; showChords: boolean; chordsOnly?: boolean
 }) {
   const lines = useMemo(() => parseBody(body), [body])
   return (
-    <div className={showChords ? 'chord-line' : 'leading-relaxed'}>
+    <div className={`${showChords ? 'chord-line' : 'leading-relaxed'}${chordsOnly ? ' chords-only' : ''}`}>
       {lines.map((line, i) => {
         if (line.length === 1 && line[0].chord === null && !line[0].text.trim()) {
           return <div key={i} className="h-3" />
@@ -69,33 +69,6 @@ function ChordedSection({ body, transpose, targetKey, showChords }: {
   )
 }
 
-/** Сітка акордів без тексту — для баса й барабанів */
-function GridSection({ body, transpose, targetKey }: {
-  body: string; transpose: number; targetKey: string
-}) {
-  const chords = useMemo(() => chordSequence(body), [body])
-  if (chords.length === 0) {
-    return <div className="text-slate-500 text-sm italic">— без акордів —</div>
-  }
-  // Схлопуємо підряд однакові: G G G D → G ×3, D
-  const runs: { chord: string; count: number }[] = []
-  for (const c of chords) {
-    const last = runs[runs.length - 1]
-    if (last && last.chord === c) last.count += 1
-    else runs.push({ chord: c, count: 1 })
-  }
-  return (
-    <div className="flex flex-wrap gap-2">
-      {runs.map((r, i) => (
-        <span key={i} className="inline-flex items-baseline gap-1 rounded-lg bg-white/[0.06] border border-white/10 px-3 py-1.5 font-mono font-bold text-amber-400">
-          {isChord(r.chord) ? transposeChord(r.chord, transpose, targetKey) : r.chord}
-          {r.count > 1 && <span className="text-[10px] text-slate-500 font-sans">×{r.count}</span>}
-        </span>
-      ))}
-    </div>
-  )
-}
-
 export default function SongBody({ sections, arrangement, view, transpose, targetKey, fontSize }: Props) {
   const byId = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections])
   const order = arrangement.length ? arrangement : sections.map((s) => s.id)
@@ -118,16 +91,13 @@ export default function SongBody({ sections, arrangement, view, transpose, targe
       {items.map(({ section, repeat }, i) => (
         <section key={`${section.id}_${i}`}>
           <SectionHeading section={section} repeat={repeat} />
-          {view === 'grid' ? (
-            <GridSection body={section.body} transpose={transpose} targetKey={targetKey} />
-          ) : (
-            <ChordedSection
-              body={section.body}
-              transpose={transpose}
-              targetKey={targetKey}
-              showChords={view === 'chords'}
-            />
-          )}
+          <ChordedSection
+            body={section.body}
+            transpose={transpose}
+            targetKey={targetKey}
+            showChords={view !== 'text'}
+            chordsOnly={view === 'grid'}
+          />
         </section>
       ))}
     </div>

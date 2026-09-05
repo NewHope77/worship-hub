@@ -41,6 +41,13 @@ body {
   white-space: nowrap;
 }
 
+/*
+ * Режим «тільки акорди»: текст не видаляємо, а робимо невидимим — так він
+ * зберігає свою ширину, і кожен акорд лишається рівно над своїм складом.
+ */
+.chords-only .chord-slot { visibility: hidden; }
+.chords-only .chord-slot > .chord { visibility: visible; }
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 

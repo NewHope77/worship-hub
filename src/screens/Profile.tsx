@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { InstrumentId, Member, ViewMode } from '../types'
+import type { InstrumentId, Member } from '../types'
 import { INSTRUMENTS } from '../types'
 import { useStore } from '../store'
 import { newId } from '../chordpro/parse'
@@ -78,15 +78,24 @@ export default function Profile() {
         <div className="space-y-3">
           <div className="font-semibold text-sm text-slate-300">Мої налаштування</div>
 
-          <Field label="Як показувати пісні за замовчуванням"
+          <Field label="Що показувати в піснях за замовчуванням"
             hint={primary ? `для інструмента «${primary.name}» зазвичай найзручніше` : undefined}>
             <div className="flex gap-2">
-              {(['text', 'chords', 'grid'] as ViewMode[]).map((v) => (
-                <Button key={v} variant="chip" active={prefs.viewMode === v}
-                  onClick={() => setPrefs({ viewMode: v })} className="flex-1">
-                  {v === 'text' ? 'Текст' : v === 'chords' ? 'Акорди' : 'Сітка'}
-                </Button>
-              ))}
+              <Button variant="chip" active={prefs.viewMode !== 'grid'} className="flex-1"
+                disabled={prefs.viewMode === 'text'}
+                onClick={() => setPrefs({ viewMode: prefs.viewMode === 'grid' ? 'chords' : 'text' })}>
+                {prefs.viewMode !== 'grid' ? '✓ ' : ''}Текст
+              </Button>
+              <Button variant="chip" active={prefs.viewMode !== 'text'} className="flex-1"
+                disabled={prefs.viewMode === 'grid'}
+                onClick={() => setPrefs({ viewMode: prefs.viewMode === 'text' ? 'chords' : 'grid' })}>
+                {prefs.viewMode !== 'text' ? '✓ ' : ''}Акорди
+              </Button>
+            </div>
+            <div className="text-[11px] text-slate-500 mt-1.5">
+              {prefs.viewMode === 'chords' ? 'Акорди над словами'
+                : prefs.viewMode === 'text' ? 'Тільки слова'
+                : 'Тільки акорди — на своїх місцях над складами'}
             </div>
           </Field>
 
