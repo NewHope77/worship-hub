@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Song, ViewMode } from '../types'
 import { useStore, effectiveView } from '../store'
-import { transposeKey, semitonesBetween } from '../chordpro/transpose'
+import { transposeKey, semitonesBetween, transposeChord } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
+import type { ChordSpot } from '../components/SongBody'
+import ChordPicker from '../components/ChordPicker'
+import ActionSheet from '../components/ActionSheet'
+import { moveChord, replaceChord, removeChord, insertChord } from '../chordpro/editChords'
 import RawSong from '../components/RawSong'
 import { transposeRaw, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
@@ -28,9 +32,12 @@ interface Props {
 }
 
 export default function SongView({ song, setlistTranspose = null, onBack, onEdit }: Props) {
-  const { prefs, setPrefs, personalFor, setPersonal, me } = useStore()
+  const { prefs, setPrefs, personalFor, setPersonal, me, upsertSong } = useStore()
   const personal = personalFor(song.id)
   const [panel, setPanel] = useState<'none' | 'settings' | 'note'>('none')
+  const [editing, setEditing] = useState(false)
+  const [spot, setSpot] = useState<ChordSpot | null>(null)
+  const [picking, setPicking] = useState<ChordSpot | null>(null)
   const [scrolling, setScrolling] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -99,6 +106,23 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
     if (!prefs.showCapo || personal.capo === 0) return null
     return `каподастр ${personal.capo} → форми в ${shapeKey}`
   }, [prefs.showCapo, personal.capo, shapeKey])
+
+  /** Міняє тіло однієї секції — саме там акорди прив'язані до складів */
+  const editSection = (sectionId: string, fn: (body: string) => string) => {
+    upsertSong({
+      ...song,
+      sections: song.sections.map((sec) =>
+        sec.id === sectionId ? { ...sec, body: fn(sec.body) } : sec,
+      ),
+    })
+  }
+
+  /**
+   * На екрані акорди показані в поточній тональності, а зберігаються в
+   * оригінальній — тому введене повертаємо назад перед записом.
+   */
+  const toStored = (shown: string) =>
+    transpose === 0 ? shown : transposeChord(shown, -transpose, song.originalKey)
 
   const shift = (d: number) => {
     if (usingSetlistKey) return
@@ -245,6 +269,27 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             </div>
           </div>
 
+          <div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Акорди</div>
+            <div className="flex gap-2">
+              <Button variant="chip" active={editing} className="flex-1"
+                disabled={showOriginal}
+                onClick={() => { setEditing((e) => !e); setPanel('none') }}
+                title={showOriginal ? 'Доступно в показі «Розібрано»' : undefined}>
+                {editing ? '✓ Правлю акорди' : '✏️ Правити акорди'}
+              </Button>
+              <Button variant="chip" active={prefs.chordsAccent} className="flex-1"
+                onClick={() => setPrefs({ chordsAccent: !prefs.chordsAccent })}>
+                🎵 Акцент на акордах
+              </Button>
+            </div>
+            <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
+              {showOriginal
+                ? 'Правка акордів працює в показі «Розібрано»'
+                : 'Акцент приглушує текст і збільшує акорди — зручно басу й барабанам'}
+            </div>
+          </div>
+
           <div className="flex gap-2 pt-1">
             <Button onClick={onEdit} className="flex-1">Редагувати пісню</Button>
             <Button onClick={() => window.print()}>Друк</Button>
@@ -274,6 +319,15 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         </div>
       )}
 
+      {editing && (
+        <div className="no-print flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)]/12 border-b border-[var(--line)]">
+          <span className="text-xs text-[var(--text-muted)] flex-1">
+            Тисни на акорд, щоб посунути чи змінити. Тисни на слово — щоб додати акорд.
+          </span>
+          <Button variant="chip" onClick={() => setEditing(false)}>Готово</Button>
+        </div>
+      )}
+
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {showOriginal ? (
           <div className="px-4 pt-4 pb-40 overflow-x-auto">
@@ -290,7 +344,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             />
           </div>
         ) : (
-          <div className="px-4 pt-4">
+          <div className={`px-4 pt-4${prefs.chordsAccent ? ' chords-accent' : ''}`}>
             <SongBody
               sections={song.sections}
               arrangement={song.arrangement}
@@ -298,6 +352,8 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
               transpose={transpose - personal.capo}
               targetKey={personal.capo ? shapeKey : currentKey}
               fontSize={prefs.fontSize}
+              editing={editing}
+              onPickChord={setSpot}
             />
           </div>
         )}
@@ -328,6 +384,53 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </Button>
         </div>
       </div>
+
+      {spot && (
+        <ActionSheet
+          title={spot.index >= 0 ? `Акорд ${spot.chord}` : 'Додати акорд'}
+          subtitle={spot.index >= 0
+            ? 'Посунь на склад ліворуч чи праворуч, або зміни його'
+            : 'Акорд стане над цим складом'}
+          onClose={() => setSpot(null)}
+          actions={spot.index >= 0 ? [
+            {
+              label: 'Посунути ліворуч', icon: '⬅️',
+              onClick: () => editSection(spot.sectionId,
+                (b) => moveChord(b, { line: spot.line, index: spot.index }, -1)),
+            },
+            {
+              label: 'Посунути праворуч', icon: '➡️',
+              onClick: () => editSection(spot.sectionId,
+                (b) => moveChord(b, { line: spot.line, index: spot.index }, 1)),
+            },
+            { label: 'Змінити акорд', icon: '🎸', onClick: () => setPicking(spot) },
+            {
+              label: 'Видалити акорд', icon: '🗑', danger: true,
+              onClick: () => editSection(spot.sectionId,
+                (b) => removeChord(b, { line: spot.line, index: spot.index })),
+            },
+          ] : [
+            { label: 'Поставити акорд тут', icon: '🎸', onClick: () => setPicking(spot) },
+          ]}
+        />
+      )}
+
+      {picking && (
+        <ChordPicker
+          title={picking.index >= 0 ? 'Новий акорд замість старого' : 'Який акорд поставити'}
+          initial={picking.chord ? transposeChord(picking.chord, transpose, currentKey) : ''}
+          onCancel={() => setPicking(null)}
+          onConfirm={(chord) => {
+            const stored = toStored(chord)
+            editSection(picking.sectionId, (b) =>
+              picking.index >= 0
+                ? replaceChord(b, { line: picking.line, index: picking.index }, stored)
+                : insertChord(b, picking.line, picking.textPos, stored))
+            setPicking(null)
+            setSpot(null)
+          }}
+        />
+      )}
     </div>
   )
 }

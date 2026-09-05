@@ -92,6 +92,28 @@ body {
   padding-right: 1em;
 }
 
+/* Режим правки: показуємо, куди можна тицьнути */
+.editable-chord {
+  cursor: pointer;
+  border-radius: 4px;
+  outline: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
+}
+.editable-chord:active { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+.editable-text { cursor: pointer; }
+.editable-text:active { background: var(--surface-hover); }
+
+/* Акцент на акордах — для баса й барабанів: акорди крупніші, текст тихіший */
+.chords-accent .chord {
+  font-size: 1.05em;
+}
+.chords-accent .chord-slot > span:not(.chord),
+.chords-accent .chord-slot--plain {
+  opacity: 0.45;
+  font-size: 0.9em;
+}
+
 /* Шматок рядка без акорда переносимо як звичайний текст */
 .chord-slot--plain {
   display: inline;

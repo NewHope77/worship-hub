@@ -4,6 +4,16 @@ import { SECTION_KINDS } from '../types'
 import { parseBody, lineHasChords } from '../chordpro/parse'
 import { transposeChord } from '../chordpro/transpose'
 
+export interface ChordSpot {
+  sectionId: string
+  line: number
+  /** Порядковий номер акорду в рядку; -1 — коли акорду ще немає */
+  index: number
+  /** Позиція символу в тексті — потрібна, щоб вставити акорд саме сюди */
+  textPos: number
+  chord: string
+}
+
 interface Props {
   sections: Section[]
   /** Порядок секцій; елементи можуть повторюватись */
@@ -12,6 +22,9 @@ interface Props {
   transpose: number
   targetKey: string
   fontSize: number
+  /** Увімкнено правку акордів — тоді по них можна тицяти */
+  editing?: boolean
+  onPickChord?(spot: ChordSpot): void
 }
 
 function SectionHeading({ section, repeat }: { section: Section; repeat: number | null }) {
@@ -30,8 +43,9 @@ function SectionHeading({ section, repeat }: { section: Section; repeat: number 
 }
 
 /** Текст + акорди над словами; `chordsOnly` ховає текст, лишаючи акорди на місцях */
-function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: {
+function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly, sectionId, editing, onPickChord }: {
   body: string; transpose: number; targetKey: string; showChords: boolean; chordsOnly?: boolean
+  sectionId?: string; editing?: boolean; onPickChord?(spot: ChordSpot): void
 }) {
   const lines = useMemo(() => parseBody(body), [body])
   return (
@@ -57,17 +71,43 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: 
         // інакше від нього лишалася б порожня смуга
         if (chordsOnly && !lineHasChords(line)) return null
 
+        // Рахуємо, скільки акордів і символів тексту вже пройшли — за цим
+        // потім знаходимо саме той акорд, по якому тицьнули
+        let chordNo = -1
+        let textOffset = 0
+
         return (
           <div key={i} className="whitespace-pre-wrap">
             {line.map((t, j) => {
+              const posHere = textOffset
+              textOffset += t.text.length
+              if (t.chord) chordNo += 1
+              const myChordNo = chordNo
+
+              const pick = editing && onPickChord && sectionId
+                ? () => onPickChord({
+                    sectionId, line: i,
+                    index: t.chord ? myChordNo : -1,
+                    textPos: posHere,
+                    chord: t.chord ?? '',
+                  })
+                : undefined
+
               // Без акорда — звичайний текст, щоб довгі фрази нормально переносились
               if (!showChords || !t.chord) {
-                return <span key={j} className="chord-slot--plain">{t.text}</span>
+                return (
+                  <span key={j} onClick={pick}
+                    className={`chord-slot--plain${editing ? ' editable-text' : ''}`}>
+                    {t.text}
+                  </span>
+                )
               }
               return (
                 <span key={j} className="chord-slot">
-                  <span className="chord">{transposeChord(t.chord, transpose, targetKey)}</span>
-                  <span>{t.text}</span>
+                  <span className={`chord${editing ? ' editable-chord' : ''}`} onClick={pick}>
+                    {transposeChord(t.chord, transpose, targetKey)}
+                  </span>
+                  <span onClick={pick} className={editing ? 'editable-text' : undefined}>{t.text}</span>
                 </span>
               )
             })}
@@ -78,7 +118,9 @@ function ChordedSection({ body, transpose, targetKey, showChords, chordsOnly }: 
   )
 }
 
-export default function SongBody({ sections, arrangement, view, transpose, targetKey, fontSize }: Props) {
+export default function SongBody({
+  sections, arrangement, view, transpose, targetKey, fontSize, editing, onPickChord,
+}: Props) {
   const byId = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections])
   const order = arrangement.length ? arrangement : sections.map((s) => s.id)
 
@@ -106,6 +148,9 @@ export default function SongBody({ sections, arrangement, view, transpose, targe
             targetKey={targetKey}
             showChords={view !== 'text'}
             chordsOnly={view === 'grid'}
+            sectionId={section.id}
+            editing={editing}
+            onPickChord={onPickChord}
           />
         </section>
       ))}

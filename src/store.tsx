@@ -14,6 +14,7 @@ export const DEFAULT_PREFS: MemberPrefs = {
   layout: 'parsed',
   rawFontSize: 13,
   theme: 'dark',
+  chordsAccent: false,
 }
 
 interface Store {

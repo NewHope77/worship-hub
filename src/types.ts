@@ -37,6 +37,8 @@ export interface MemberPrefs {
   rawFontSize: number
   /** Темний екран для сцени, світлий — для яскравого світла */
   theme: Theme
+  /** Акорди крупніші, текст приглушений — для баса й барабанів */
+  chordsAccent: boolean
 }
 
 export type SectionKind =
