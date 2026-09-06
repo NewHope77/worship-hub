@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { InstrumentId, Member } from '../types'
-import { INSTRUMENTS, playsInstrument } from '../types'
+import { INSTRUMENTS, playsInstrument, needsChords } from '../types'
 import { LANGS } from '../i18n'
 import { useStore } from '../store'
 import { newId } from '../chordpro/parse'
@@ -89,7 +89,7 @@ export default function Profile() {
         <div className="space-y-3">
           <div className="font-semibold text-sm text-[var(--text)]">{t('profile.mySettings')}</div>
 
-          {playsInstrument(me, 'drums') ? (
+          {!needsChords(me) ? (
             <Field label={t('profile.showInSongs')}
               hint={t('profile.drummerHint')}>
               <div className="rounded-xl bg-[var(--surface-1)] border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text-muted)]">

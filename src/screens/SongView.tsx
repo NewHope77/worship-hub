@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Song, ViewMode } from '../types'
 import { useStore, effectiveView } from '../store'
-import { playsInstrument } from '../types'
+import { playsInstrument, needsChords } from '../types'
 import { transposeKey, semitonesBetween, transposeChord } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
 import type { ChordSpot } from '../components/SongBody'
@@ -43,13 +43,14 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
 
   // Що показувати — залежить від інструмента: барабанщику акорди не потрібні,
   // каподастр має сенс лише на акустиці, метроном — лише барабанщику
-  const isDrummer = playsInstrument(me, 'drums')
+  // Акорди має сенс показувати лише тим, хто на них грає
+  const chordsOff = !needsChords(me)
   const showsCapo = playsInstrument(me, 'agtr')
-  const showsMetronome = isDrummer
+  const showsMetronome = playsInstrument(me, 'drums')
 
   const usingSetlistKey = setlistTranspose !== null
   const transpose = usingSetlistKey ? setlistTranspose : personal.transpose
-  const view = isDrummer ? 'text' : effectiveView(personal, prefs)
+  const view = chordsOff ? 'text' : effectiveView(personal, prefs)
   const currentKey = transposeKey(song.originalKey, transpose)
   // Каподастр не змінює звучання — тільки аплікатуру: показуємо форму акорду
   const shapeKey = transposeKey(currentKey, -personal.capo)
@@ -168,7 +169,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           <div>
             <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.show')}</div>
             <div className="flex gap-2">
-              {!isDrummer && (
+              {!chordsOff && (
                 <Toggle
                   label={t('view.text')}
                   on={view !== 'grid'}
@@ -177,12 +178,12 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
                   onClick={() => setPersonal(song.id, { viewMode: toView(view === 'grid', true) })}
                 />
               )}
-              {isDrummer && (
+              {chordsOff && (
                 <span className="text-xs text-[var(--text-faint)] py-1.5">
                   {t('view.drummerNote')}
                 </span>
               )}
-              {!isDrummer && (
+              {!chordsOff && (
                 <Toggle
                   label={t('view.chords')}
                   on={view !== 'text'}

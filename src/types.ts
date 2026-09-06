@@ -148,6 +148,17 @@ export interface AppData {
   prefs: Record<string, MemberPrefs>
 }
 
+/**
+ * Інструменти, для яких акорди справді потрібні.
+ * Вокалісту й барабанщику вони лише заважають читати текст.
+ */
+const CHORD_INSTRUMENTS: InstrumentId[] = ['keys', 'agtr', 'egtr', 'bass']
+
+/** Чи потрібні цьому учаснику акорди взагалі */
+export function needsChords(member: { instruments: InstrumentId[] } | null): boolean {
+  return !!member?.instruments.some((i) => CHORD_INSTRUMENTS.includes(i))
+}
+
 /** Чи грає учасник на цьому інструменті */
 export function playsInstrument(
   member: { instruments: InstrumentId[] } | null,
