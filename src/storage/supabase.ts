@@ -4,6 +4,7 @@ import type { AppData, Member, MemberPrefs, Setlist, Song, SongPersonal } from '
 import type { StorageAdapter } from './adapter'
 import type { CloudConfig } from './config'
 import { seedData } from '../data/seed'
+import { migrateSetlists } from '../data/migrateSetlists'
 
 /**
  * Спільна база для всієї групи.
@@ -72,7 +73,7 @@ export function createSupabaseAdapter(config: CloudConfig): StorageAdapter {
       // Порожня база — підставляємо стартовий склад, щоб було з чого почати
       members: loadedMembers.length ? loadedMembers : seed.members,
       songs: rows<Song>(songs),
-      setlists: rows<Setlist>(setlists),
+      setlists: migrateSetlists(rows<Setlist>(setlists)),
       personal: rows<SongPersonal>(personal),
       prefs: Object.fromEntries(prefsRows.map((r) => [r.id, r.data as MemberPrefs])),
     }

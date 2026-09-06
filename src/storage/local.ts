@@ -1,6 +1,7 @@
 import type { AppData } from '../types'
 import type { StorageAdapter } from './adapter'
 import { seedData } from '../data/seed'
+import { migrateSetlists } from '../data/migrateSetlists'
 
 const KEY = 'worship-hub:data:v1'
 
@@ -15,7 +16,7 @@ export const localAdapter: StorageAdapter = {
         members: parsed.members ?? seed.members,
         // Пісні, збережені до появи режиму оригіналу, не мають поля raw
         songs: (parsed.songs ?? seed.songs).map((s) => ({ ...s, raw: s.raw ?? '' })),
-        setlists: parsed.setlists ?? seed.setlists,
+        setlists: migrateSetlists(parsed.setlists ?? seed.setlists),
         songOrder: parsed.songOrder ?? [],
         personal: parsed.personal ?? [],
         prefs: parsed.prefs ?? {},

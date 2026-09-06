@@ -153,7 +153,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         songs: d.songs.filter((s) => s.id !== id),
         songOrder: d.songOrder?.filter((x) => x !== id),
         personal: d.personal.filter((p) => p.songId !== id),
-        setlists: d.setlists.map((sl) => ({ ...sl, items: sl.items.filter((it) => it.songId !== id) })),
+        setlists: d.setlists.map((sl) => ({
+          ...sl,
+          blocks: (sl.blocks ?? []).map((b) => ({
+            ...b,
+            items: b.items.filter((it) => it.songId !== id),
+          })),
+        })),
       }))
     },
 

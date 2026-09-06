@@ -114,12 +114,24 @@ export interface SetlistItem {
   note: string
 }
 
+/**
+ * Частина сету зі своєю назвою: «Прославлення», «Поклоніння», «Перед словом».
+ * На конференції таких блоків буває кілька, з різною кількістю пісень.
+ */
+export interface SetlistBlock {
+  id: string
+  title: string
+  items: SetlistItem[]
+}
+
 export interface Setlist {
   id: string
   title: string
   /** ISO-дата YYYY-MM-DD */
   date: string
-  items: SetlistItem[]
+  blocks: SetlistBlock[]
+  /** Плоский список із ранніх версій — перетворюється на один блок */
+  items?: SetlistItem[]
   updatedAt: number
 }
 
