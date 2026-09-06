@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useStore } from '../store'
 
 export interface SheetAction {
   label: string
@@ -14,6 +15,7 @@ export default function ActionSheet({ title, subtitle, actions, onClose }: {
   actions: SheetAction[]
   onClose(): void
 }) {
+  const { t } = useStore()
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end" role="dialog" aria-label={title}>
       <button
@@ -48,7 +50,7 @@ export default function ActionSheet({ title, subtitle, actions, onClose }: {
             className="w-full px-4 py-3.5 rounded-2xl bg-[var(--surface-1)] text-[var(--text-muted)] font-medium
                        hover:bg-[var(--surface-hover)] active:scale-[0.98] transition mt-1"
           >
-            Скасувати
+            {t('common.cancel')}
           </button>
         </div>
       </div>

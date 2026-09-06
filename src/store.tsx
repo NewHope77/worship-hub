@@ -35,6 +35,8 @@ interface Store {
 
   upsertSong(song: Song): void
   deleteSong(id: string): void
+  /** Порядок пісень у списку — після перетягування */
+  reorderSongs(ids: string[]): void
   upsertSetlist(sl: Setlist): void
   deleteSetlist(id: string): void
   upsertMember(m: Member): void
@@ -135,13 +137,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const next = { ...song, updatedAt: Date.now() }
         const i = d.songs.findIndex((s) => s.id === song.id)
         const songs = i === -1 ? [...d.songs, next] : d.songs.map((s) => (s.id === song.id ? next : s))
-        return { ...d, songs }
+        const songOrder = i === -1 && d.songOrder?.length
+          ? [...d.songOrder, song.id]
+          : d.songOrder
+        return { ...d, songs, songOrder }
       })
     },
+    reorderSongs(ids) {
+      setData((d) => ({ ...d, songOrder: ids }))
+    },
+
     deleteSong(id) {
       setData((d) => ({
         ...d,
         songs: d.songs.filter((s) => s.id !== id),
+        songOrder: d.songOrder?.filter((x) => x !== id),
         personal: d.personal.filter((p) => p.songId !== id),
         setlists: d.setlists.map((sl) => ({ ...sl, items: sl.items.filter((it) => it.songId !== id) })),
       }))

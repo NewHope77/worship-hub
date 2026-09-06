@@ -4,6 +4,7 @@ import { useStore } from '../store'
 import { stripChords } from '../chordpro/parse'
 import { TopBar, Button, Empty, inputClass } from '../components/ui'
 import { useLongPress } from '../components/LongPress'
+import { SortableList, SortableRow } from '../components/Sortable'
 import ActionSheet from '../components/ActionSheet'
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export default function SongList({ onOpen, onNew, onEdit }: Props) {
-  const { data, personalFor, deleteSong, t } = useStore()
+  const { data, personalFor, deleteSong, reorderSongs, t } = useStore()
   const [q, setQ] = useState('')
   const [tag, setTag] = useState<string | null>(null)
   // Пісня, на якій затримали палець — для неї показуємо меню дій
@@ -26,9 +27,23 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
     return [...set].sort()
   }, [data.songs])
 
+  const ordered = useMemo(() => {
+    const manual = data.songOrder ?? []
+    if (!manual.length) {
+      return [...data.songs].sort((a, b) => a.title.localeCompare(b.title, 'uk'))
+    }
+    // Пісні, яких ще немає у власному порядку (щойно додані), йдуть у кінець
+    const rank = new Map(manual.map((id, i) => [id, i]))
+    return [...data.songs].sort((a, b) => {
+      const ra = rank.get(a.id) ?? Number.MAX_SAFE_INTEGER
+      const rb = rank.get(b.id) ?? Number.MAX_SAFE_INTEGER
+      return ra === rb ? a.title.localeCompare(b.title, 'uk') : ra - rb
+    })
+  }, [data.songs, data.songOrder])
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    return data.songs
+    return ordered
       .filter((s) => !tag || s.tags.includes(tag))
       .filter((s) => {
         if (!needle) return true
@@ -37,8 +52,11 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
         // Пошук по тексту без акордів
         return s.sections.some((sec) => stripChords(sec.body).toLowerCase().includes(needle))
       })
-      .sort((a, b) => a.title.localeCompare(b.title, 'uk'))
-  }, [data.songs, q, tag])
+  }, [ordered, q, tag])
+
+  // Переставляти можна лише коли видно весь список: інакше перетягування
+  // всередині відфільтрованого шматка зіпсувало б порядок решти
+  const canReorder = !q.trim() && !tag
 
   return (
     <div className="min-h-full flex flex-col">
@@ -72,16 +90,41 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
         />
       ) : (
         <div className="flex-1 px-3 py-2 space-y-1.5">
-          {filtered.map((s) => (
-            <SongRow
-              key={s.id}
-              song={s}
-              hasNote={personalFor(s.id).note.trim().length > 0}
-              noteLabel={t('songs.hasNote')}
-              onOpen={() => onOpen(s)}
-              onHold={() => setMenuFor(s)}
-            />
-          ))}
+          {canReorder ? (
+            <SortableList
+              items={filtered.map((s) => ({ key: s.id }))}
+              holdDelay={260}
+              onReorder={(next) => reorderSongs(next.map((r) => r.key))}
+            >
+              <div className="space-y-1.5">
+                {filtered.map((s) => (
+                  <SortableRow key={s.id} id={s.id}>
+                    {(handle) => (
+                      <SongRow
+                        song={s}
+                        hasNote={personalFor(s.id).note.trim().length > 0}
+                        noteLabel={t('songs.hasNote')}
+                        onOpen={() => onOpen(s)}
+                        onHold={() => setMenuFor(s)}
+                        dragProps={{ ...handle.attributes, ...handle.listeners }}
+                      />
+                    )}
+                  </SortableRow>
+                ))}
+              </div>
+            </SortableList>
+          ) : (
+            filtered.map((s) => (
+              <SongRow
+                key={s.id}
+                song={s}
+                hasNote={personalFor(s.id).note.trim().length > 0}
+                noteLabel={t('songs.hasNote')}
+                onOpen={() => onOpen(s)}
+                onHold={() => setMenuFor(s)}
+              />
+            ))
+          )}
           <p className="text-center text-[11px] text-[var(--text-faint)] pt-3 pb-1">
             {t('songs.holdHint')}
           </p>
@@ -121,14 +164,28 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
 }
 
 /** Рядок списку: тап відкриває, довге натискання — меню дій */
-function SongRow({ song, hasNote, noteLabel, onOpen, onHold }: {
+function SongRow({ song, hasNote, noteLabel, onOpen, onHold, dragProps }: {
   song: Song; hasNote: boolean; noteLabel: string; onOpen(): void; onHold(): void
+  dragProps?: Record<string, unknown>
 }) {
-  const { handlers, consumedClick } = useLongPress(onHold)
+  // Тримати й не рухати — меню; тримати й потягнути — перенесення.
+  // Рух скасовує довге натискання, тож жести не сперечаються.
+  const { handlers, consumedClick } = useLongPress(onHold, 520)
+
+  // Обидва жести слухають ті самі події, тож обробники треба зчепити,
+  // інакше другий набір мовчки перекриє перший
+  const merged: Record<string, unknown> = { ...dragProps }
+  for (const [name, fn] of Object.entries(handlers)) {
+    const fromDrag = dragProps?.[name]
+    merged[name] = typeof fromDrag === 'function'
+      ? (e: unknown) => { (fromDrag as (x: unknown) => void)(e); (fn as (x: unknown) => void)(e) }
+      : fn
+  }
+
   return (
     <button
       onClick={() => { if (!consumedClick()) onOpen() }}
-      {...handlers}
+      {...merged}
       className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)]
                  hover:bg-[var(--surface-hover)] active:scale-[0.99] transition text-left select-none touch-manipulation"
     >

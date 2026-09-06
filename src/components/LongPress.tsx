@@ -16,12 +16,25 @@ export function useLongPress(onLongPress: () => void, ms = 450) {
       timer.current = null
     }
     startedAt.current = null
+    document.removeEventListener('pointermove', watchMove)
+  }
+
+  /**
+   * Рух стежимо на всьому документі, а не лише на самому елементі:
+   * коли починається перетягування, події перехоплює воно, і до елемента
+   * вони вже не доходять — тоді меню відкривалося б просто під час переносу.
+   */
+  const watchMove = (e: PointerEvent) => {
+    const start = startedAt.current
+    if (!start) return
+    if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) clear()
   }
 
   const handlers = {
     onPointerDown(e: ReactPointerEvent) {
       fired.current = false
       startedAt.current = { x: e.clientX, y: e.clientY }
+      document.addEventListener('pointermove', watchMove, { passive: true })
       timer.current = window.setTimeout(() => {
         fired.current = true
         navigator.vibrate?.(12)

@@ -126,6 +126,11 @@ export interface Setlist {
 export interface AppData {
   members: Member[]
   songs: Song[]
+  /**
+   * Власний порядок пісень, який група виставила руками.
+   * Порожній — показуємо за абеткою.
+   */
+  songOrder?: string[]
   setlists: Setlist[]
   personal: SongPersonal[]
   prefs: Record<string, MemberPrefs>

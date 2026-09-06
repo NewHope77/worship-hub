@@ -13,14 +13,16 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 /** Обгортка для вертикального списку, який можна перетягувати */
-export function SortableList<T extends { key: string }>({ items, onReorder, children }: {
+export function SortableList<T extends { key: string }>({ items, onReorder, children, holdDelay = 180 }: {
   items: T[]
   onReorder(next: T[]): void
   children: ReactNode
+  /** Скільки тримати палець до початку перетягування */
+  holdDelay?: number
 }) {
   const sensors = useSensors(
     // Затримка, щоб перетягування не заважало прокрутці пальцем
-    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: holdDelay, tolerance: 8 } }),
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )

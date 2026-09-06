@@ -16,6 +16,7 @@ export const localAdapter: StorageAdapter = {
         // Пісні, збережені до появи режиму оригіналу, не мають поля raw
         songs: (parsed.songs ?? seed.songs).map((s) => ({ ...s, raw: s.raw ?? '' })),
         setlists: parsed.setlists ?? seed.setlists,
+        songOrder: parsed.songOrder ?? [],
         personal: parsed.personal ?? [],
         prefs: parsed.prefs ?? {},
       }
