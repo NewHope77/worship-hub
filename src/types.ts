@@ -8,6 +8,9 @@ export type Layout = 'parsed' | 'original'
 
 export type Theme = 'dark' | 'light'
 
+/** Мова інтерфейсу: кнопки й налаштування. Тексти пісень не чіпає. */
+export type UiLang = 'uk' | 'ru' | 'en'
+
 export interface Instrument {
   id: InstrumentId
   name: string
@@ -40,6 +43,8 @@ export interface MemberPrefs {
   chordsAccent: boolean
   /** Скільки колонок — на широкому екрані дві вміщають удвічі більше */
   columns: 1 | 2
+  /** Мова інтерфейсу */
+  lang: UiLang
 }
 
 export type SectionKind =
@@ -92,6 +97,10 @@ export interface SongPersonal {
   viewMode: ViewMode | null
   /** Особиста нотатка — бачить тільки власник */
   note: string
+  /** Темп для метронома — барабанщик ставить свій, не чіпаючи пісню */
+  metronomeTempo?: number | null
+  /** Розмір такту для метронома */
+  metronomeSignature?: string
 }
 
 export interface SetlistItem {
@@ -120,6 +129,14 @@ export interface AppData {
   setlists: Setlist[]
   personal: SongPersonal[]
   prefs: Record<string, MemberPrefs>
+}
+
+/** Чи грає учасник на цьому інструменті */
+export function playsInstrument(
+  member: { instruments: InstrumentId[] } | null,
+  id: InstrumentId,
+): boolean {
+  return !!member?.instruments.includes(id)
 }
 
 export const INSTRUMENTS: Instrument[] = [

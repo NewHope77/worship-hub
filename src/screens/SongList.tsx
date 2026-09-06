@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function SongList({ onOpen, onNew, onEdit }: Props) {
-  const { data, personalFor, deleteSong } = useStore()
+  const { data, personalFor, deleteSong, t } = useStore()
   const [q, setQ] = useState('')
   const [tag, setTag] = useState<string | null>(null)
   // Пісня, на якій затримали палець — для неї показуємо меню дій
@@ -43,17 +43,17 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
   return (
     <div className="min-h-full flex flex-col">
       <TopBar
-        title="Пісні"
-        subtitle={`${data.songs.length} у базі`}
-        right={<Button variant="primary" onClick={onNew} className="!px-3 !py-2">+ Пісня</Button>}
+        title={t('songs.title')}
+        subtitle={`${data.songs.length} ${t('songs.count')}`}
+        right={<Button variant="primary" onClick={onNew} className="!px-3 !py-2">{t('songs.add')}</Button>}
       />
 
       <div className="px-3 pt-3 space-y-2">
-        <input className={inputClass} placeholder="Пошук за назвою або рядком тексту…"
+        <input className={inputClass} placeholder={t('songs.searchPlaceholder')}
           value={q} onChange={(e) => setQ(e.target.value)} />
         {allTags.length > 0 && (
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            <Button variant="chip" active={tag === null} onClick={() => setTag(null)}>усі</Button>
+            <Button variant="chip" active={tag === null} onClick={() => setTag(null)}>{t('common.all')}</Button>
             {allTags.map((t) => (
               <Button key={t} variant="chip" active={tag === t}
                 onClick={() => setTag(tag === t ? null : t)} className="whitespace-nowrap">{t}</Button>
@@ -65,7 +65,7 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
       {filtered.length === 0 ? (
         <Empty
           icon={q ? '🔍' : '🎼'}
-          title={q ? 'Нічого не знайшлось' : 'База порожня'}
+          title={q ? t('songs.notFound') : t('songs.emptyTitle')}
           hint={q ? 'Спробуй інше слово — пошук іде і по тексту пісень.'
                   : 'Додай першу пісню — можна просто вставити текст із Telegram, застосунок сам поріже його на куплети.'}
           action={!q && <Button variant="primary" onClick={onNew}>Додати пісню</Button>}
@@ -77,12 +77,13 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
               key={s.id}
               song={s}
               hasNote={personalFor(s.id).note.trim().length > 0}
+              noteLabel={t('songs.hasNote')}
               onOpen={() => onOpen(s)}
               onHold={() => setMenuFor(s)}
             />
           ))}
           <p className="text-center text-[11px] text-[var(--text-faint)] pt-3 pb-1">
-            Затисни пісню, щоб перейменувати чи видалити
+            {t('songs.holdHint')}
           </p>
         </div>
       )}
@@ -93,9 +94,9 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
           subtitle={menuFor.author || undefined}
           onClose={() => setMenuFor(null)}
           actions={[
-            { label: 'Відкрити', icon: '🎵', onClick: () => onOpen(menuFor) },
-            { label: 'Редагувати', icon: '✏️', onClick: () => onEdit(menuFor) },
-            { label: 'Видалити', icon: '🗑', danger: true, onClick: () => setConfirmDelete(menuFor) },
+            { label: t('common.open'), icon: '🎵', onClick: () => onOpen(menuFor) },
+            { label: t('common.edit'), icon: '✏️', onClick: () => onEdit(menuFor) },
+            { label: t('common.delete'), icon: '🗑', danger: true, onClick: () => setConfirmDelete(menuFor) },
           ]}
         />
       )}
@@ -120,8 +121,8 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
 }
 
 /** Рядок списку: тап відкриває, довге натискання — меню дій */
-function SongRow({ song, hasNote, onOpen, onHold }: {
-  song: Song; hasNote: boolean; onOpen(): void; onHold(): void
+function SongRow({ song, hasNote, noteLabel, onOpen, onHold }: {
+  song: Song; hasNote: boolean; noteLabel: string; onOpen(): void; onHold(): void
 }) {
   const { handlers, consumedClick } = useLongPress(onHold)
   return (
@@ -136,7 +137,7 @@ function SongRow({ song, hasNote, onOpen, onHold }: {
         <div className="text-xs text-[var(--text-faint)] truncate">
           {song.author || '—'}
           {song.tempo ? ` · ${song.tempo} BPM` : ''}
-          {hasNote ? ' · 📝 є нотатка' : ''}
+          {hasNote ? ` · 📝 ${noteLabel}` : ''}
         </div>
       </div>
       <span className="shrink-0 font-mono font-bold text-[var(--accent)] text-sm bg-amber-400/10 px-2 py-1 rounded-lg">

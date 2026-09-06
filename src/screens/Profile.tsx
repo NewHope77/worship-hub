@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { InstrumentId, Member } from '../types'
-import { INSTRUMENTS } from '../types'
+import { INSTRUMENTS, playsInstrument } from '../types'
+import { LANGS } from '../i18n'
 import { useStore } from '../store'
 import { newId } from '../chordpro/parse'
 import { isCloudConnected } from '../storage'
@@ -20,7 +21,7 @@ const COLORS = [
 ]
 
 export default function Profile() {
-  const { me, data, prefs, setPrefs, signOut, meId, replaceAll } = useStore()
+  const { me, data, prefs, setPrefs, signOut, meId, replaceAll, t } = useStore()
   const [editing, setEditing] = useState<Member | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const [showCloud, setShowCloud] = useState(false)
@@ -40,14 +41,14 @@ export default function Profile() {
   if (showMembers) {
     return (
       <div className="min-h-full flex flex-col">
-        <TopBar left={<BackButton onClick={() => setShowMembers(false)} />} title="Учасники групи"
+        <TopBar left={<BackButton onClick={() => setShowMembers(false)} />} title={t('profile.members')}
           right={
             <Button variant="primary" className="!px-3 !py-2"
               onClick={() => setEditing({
                 id: newId('m'), name: '', instruments: ['vocal'], isLeader: false,
                 color: COLORS[data.members.length % COLORS.length],
               })}>
-              + Учасник
+              {t('member.add')}
             </Button>
           } />
         <div className="flex-1 px-3 py-3 space-y-1.5">
@@ -57,13 +58,13 @@ export default function Profile() {
               <Avatar member={m} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold flex items-center gap-1.5">
-                  {m.name || 'Без імені'}
+                  {m.name || t('member.noName')}
                   {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-amber-400/15 px-1.5 py-0.5 rounded">лідер</span>}
-                  {m.id === meId && <span className="text-[10px] text-[var(--text-faint)]">— це ти</span>}
+                  {m.id === meId && <span className="text-[10px] text-[var(--text-faint)]">{t('member.you')}</span>}
                 </div>
                 <InstrumentTags member={m} />
               </div>
-              <span className="text-[var(--text-faint)] text-sm">змінити</span>
+              <span className="text-[var(--text-faint)] text-sm">{t('member.change')}</span>
             </button>
           ))}
         </div>
@@ -75,7 +76,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <TopBar title="Я" />
+      <TopBar title={t('profile.title')} />
       <div className="flex-1 px-4 py-5 space-y-6">
         <div className="flex items-center gap-4">
           <Avatar member={me} size={64} />
@@ -86,9 +87,17 @@ export default function Profile() {
         </div>
 
         <div className="space-y-3">
-          <div className="font-semibold text-sm text-[var(--text)]">Мої налаштування</div>
+          <div className="font-semibold text-sm text-[var(--text)]">{t('profile.mySettings')}</div>
 
-          <Field label="Що показувати в піснях за замовчуванням"
+          {playsInstrument(me, 'drums') ? (
+            <Field label={t('profile.showInSongs')}
+              hint={t('profile.drummerHint')}>
+              <div className="rounded-xl bg-[var(--surface-1)] border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--text-muted)]">
+                {t('profile.drumsOnlyText')}
+              </div>
+            </Field>
+          ) : (
+          <Field label={t('profile.showDefault')}
             hint={primary ? `для інструмента «${primary.name}» зазвичай найзручніше` : undefined}>
             <div className="flex gap-2">
               <Button variant="chip" active={prefs.viewMode !== 'grid'} className="flex-1"
@@ -108,21 +117,33 @@ export default function Profile() {
                 : 'Тільки акорди — на своїх місцях над складами'}
             </div>
           </Field>
+          )}
 
-          <Field label={`Розмір тексту: ${prefs.fontSize}px`}>
+          <Field label={`${t('profile.textSize')}: ${prefs.fontSize}px`}>
             <input type="range" min={13} max={30} value={prefs.fontSize} className="w-full accent-amber-500"
               onChange={(e) => setPrefs({ fontSize: +e.target.value })} />
           </Field>
 
-          <Field label="Екран">
+          <Field label={t('profile.language')} hint={t('profile.languageHint')}>
+            <div className="flex gap-2">
+              {LANGS.map((l) => (
+                <Button key={l.id} variant="chip" active={prefs.lang === l.id} className="flex-1"
+                  onClick={() => setPrefs({ lang: l.id })}>
+                  {l.flag} {l.label}
+                </Button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label={t('profile.screen')}>
             <div className="flex gap-2">
               <Button variant="chip" active={prefs.theme === 'dark'} className="flex-1"
                 onClick={() => setPrefs({ theme: 'dark' })}>
-                🌙 Темний
+                {t('profile.dark')}
               </Button>
               <Button variant="chip" active={prefs.theme === 'light'} className="flex-1"
                 onClick={() => setPrefs({ theme: 'light' })}>
-                ☀️ Світлий
+                {t('profile.light')}
               </Button>
             </div>
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
@@ -132,15 +153,17 @@ export default function Profile() {
             </div>
           </Field>
 
-          <label className="flex items-center gap-3 py-1 cursor-pointer">
-            <input type="checkbox" checked={prefs.showCapo} className="w-4 h-4 accent-amber-500"
-              onChange={(e) => setPrefs({ showCapo: e.target.checked })} />
-            <span className="text-sm text-[var(--text)]">Показувати підказку каподастра</span>
-          </label>
+          {playsInstrument(me, 'agtr') && (
+            <label className="flex items-center gap-3 py-1 cursor-pointer">
+              <input type="checkbox" checked={prefs.showCapo} className="w-4 h-4 accent-amber-500"
+                onChange={(e) => setPrefs({ showCapo: e.target.checked })} />
+              <span className="text-sm text-[var(--text)]">{t('profile.capoHint')}</span>
+            </label>
+          )}
         </div>
 
         <div className="space-y-2 pt-2">
-          <div className="text-xs font-medium text-[var(--text-muted)]">Перенесення й копія</div>
+          <div className="text-xs font-medium text-[var(--text-muted)]">{t('profile.transfer')}</div>
           <input ref={backupInput} type="file" accept=".json,application/json" className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0]
@@ -157,11 +180,11 @@ export default function Profile() {
             }} />
           <Button className="w-full !justify-between"
             onClick={() => { downloadBackup(data); setBackupNote('Файл збережено') }}>
-            <span>⬇️ Зберегти базу у файл</span>
+            <span>{t('profile.saveFile')}</span>
             <span className="text-[var(--text-faint)] text-sm">{data.songs.length} пісень</span>
           </Button>
           <Button className="w-full !justify-between" onClick={() => backupInput.current?.click()}>
-            <span>⬆️ Завантажити базу з файлу</span>
+            <span>{t('profile.loadFile')}</span>
             <span className="text-[var(--text-faint)]">→</span>
           </Button>
           {backupNote && (
@@ -172,19 +195,19 @@ export default function Profile() {
             Наявні пісні не зникають — додається лише те, чого ще немає.
           </p>
 
-          <div className="pt-2 text-xs font-medium text-[var(--text-muted)]">Група</div>
+          <div className="pt-2 text-xs font-medium text-[var(--text-muted)]">{t('profile.group')}</div>
           <Button className="w-full !justify-between" onClick={() => setShowCloud(true)}>
-            <span>Спільна база</span>
+            <span>{t('profile.cloud')}</span>
             <span className={`text-sm ${isCloudConnected() ? 'text-emerald-400' : 'text-[var(--text-faint)]'}`}>
-              {isCloudConnected() ? 'підключено →' : 'не підключено →'}
+              {isCloudConnected() ? t('profile.connected') : t('profile.notConnected')}
             </span>
           </Button>
           <Button className="w-full !justify-between" onClick={() => setShowMembers(true)}>
-            <span>Учасники групи</span>
+            <span>{t('profile.members')}</span>
             <span className="text-[var(--text-faint)] text-sm">{data.members.length} →</span>
           </Button>
           <Button className="w-full !justify-between" onClick={signOut}>
-            <span>Вийти / змінити учасника</span>
+            <span>{t('profile.signOut')}</span>
             <span className="text-[var(--text-faint)]">→</span>
           </Button>
         </div>
@@ -200,7 +223,7 @@ export default function Profile() {
 }
 
 function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
-  const { upsertMember, deleteMember, data, meId, signOut } = useStore()
+  const { upsertMember, deleteMember, data, meId, signOut, t } = useStore()
   const [draft, setDraft] = useState<Member>(member)
   const exists = data.members.some((m) => m.id === member.id)
 
@@ -213,7 +236,7 @@ function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
     }))
 
   const save = () => {
-    upsertMember({ ...draft, name: draft.name.trim() || 'Без імені' })
+    upsertMember({ ...draft, name: draft.name.trim() || t('member.noName') })
     onDone()
   }
 
@@ -226,17 +249,17 @@ function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
 
   return (
     <div className="min-h-full flex flex-col">
-      <TopBar left={<BackButton onClick={onDone} />} title={exists ? 'Учасник' : 'Новий учасник'}
+      <TopBar left={<BackButton onClick={onDone} />} title={exists ? t('member.title') : t('member.new')}
         right={<Button variant="primary" onClick={save} className="!px-4 !py-2">Зберегти</Button>} />
       <div className="flex-1 px-4 py-5 space-y-5">
         <div className="flex justify-center"><Avatar member={draft} size={72} /></div>
 
-        <Field label="Ім'я">
-          <input className={inputClass} value={draft.name} placeholder="напр. Оля"
+        <Field label={t('member.name')}>
+          <input className={inputClass} value={draft.name} placeholder={t('member.namePlaceholder')}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })} autoFocus={!exists} />
         </Field>
 
-        <Field label="Інструменти" hint="можна кілька — напр. клавіші + вокал">
+        <Field label={t('member.instruments')} hint={t('member.instrumentsHint')}>
           <div className="flex flex-wrap gap-2">
             {INSTRUMENTS.map((i) => (
               <Button key={i.id} variant="chip" active={draft.instruments.includes(i.id)}
@@ -247,11 +270,11 @@ function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
           </div>
         </Field>
 
-        <Field label="Колір">
+        <Field label={t('member.color')}>
           <div className="flex flex-wrap gap-2">
             {COLORS.map((c) => (
               <button key={c} onClick={() => setDraft({ ...draft, color: c })}
-                aria-label="Колір"
+                aria-label={t('member.color')}
                 className={`w-9 h-9 rounded-full bg-gradient-to-br ${c} transition
                   ${draft.color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0f1115]' : 'opacity-60 hover:opacity-100'}`} />
             ))}
@@ -261,11 +284,11 @@ function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={draft.isLeader} className="w-4 h-4 accent-amber-500"
             onChange={(e) => setDraft({ ...draft, isLeader: e.target.checked })} />
-          <span className="text-sm text-[var(--text)]">Лідер прославлення</span>
+          <span className="text-sm text-[var(--text)]">{t('member.leader')}</span>
         </label>
 
         {exists && data.members.length > 1 && (
-          <Button variant="danger" className="w-full" onClick={remove}>Видалити учасника</Button>
+          <Button variant="danger" className="w-full" onClick={remove}>{t('member.delete')}</Button>
         )}
       </div>
     </div>

@@ -16,14 +16,14 @@ type Route =
   | { name: 'editSong'; songId: string | null }
   | { name: 'setlist'; setlistId: string }
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'songs', label: 'Пісні', icon: '🎼' },
-  { id: 'setlists', label: 'Сети', icon: '📋' },
-  { id: 'me', label: 'Я', icon: '👤' },
+const TABS: { id: Tab; labelKey: 'nav.songs' | 'nav.setlists' | 'nav.me'; icon: string }[] = [
+  { id: 'songs', labelKey: 'nav.songs', icon: '🎼' },
+  { id: 'setlists', labelKey: 'nav.setlists', icon: '📋' },
+  { id: 'me', labelKey: 'nav.me', icon: '👤' },
 ]
 
 export default function App() {
-  const { me, ready, data } = useStore()
+  const { me, ready, data, t } = useStore()
   const [tab, setTab] = useState<Tab>('songs')
   const [route, setRoute] = useState<Route>({ name: 'tabs' })
 
@@ -85,12 +85,12 @@ export default function App() {
 
       <nav className="no-print fixed bottom-0 inset-x-0 z-40 bg-[var(--bg)]/92 backdrop-blur-xl border-t border-[var(--line)] pb-safe">
         <div className="flex max-w-lg mx-auto">
-          {TABS.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)}
+          {TABS.map((item) => (
+            <button key={item.id} onClick={() => setTab(item.id)}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition active:scale-95 ${
-                tab === t.id ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text)]'}`}>
-              <span className="text-lg leading-none">{t.icon}</span>
-              <span className="text-[11px] font-medium">{t.label}</span>
+                tab === item.id ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text)]'}`}>
+              <span className="text-lg leading-none">{item.icon}</span>
+              <span className="text-[11px] font-medium">{t(item.labelKey)}</span>
             </button>
           ))}
         </div>

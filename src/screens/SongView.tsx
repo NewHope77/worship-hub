@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Song, ViewMode } from '../types'
 import { useStore, effectiveView } from '../store'
+import { playsInstrument } from '../types'
 import { transposeKey, semitonesBetween, transposeChord } from '../chordpro/transpose'
 import SongBody from '../components/SongBody'
 import type { ChordSpot } from '../components/SongBody'
@@ -32,7 +33,7 @@ interface Props {
 }
 
 export default function SongView({ song, setlistTranspose = null, onBack, onEdit }: Props) {
-  const { prefs, setPrefs, personalFor, setPersonal, me, upsertSong } = useStore()
+  const { prefs, setPrefs, personalFor, setPersonal, me, upsertSong, t } = useStore()
   const personal = personalFor(song.id)
   const [panel, setPanel] = useState<'none' | 'settings' | 'note'>('none')
   const [editing, setEditing] = useState(false)
@@ -40,9 +41,15 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   const [picking, setPicking] = useState<ChordSpot | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Що показувати — залежить від інструмента: барабанщику акорди не потрібні,
+  // каподастр має сенс лише на акустиці, метроном — лише барабанщику
+  const isDrummer = playsInstrument(me, 'drums')
+  const showsCapo = playsInstrument(me, 'agtr')
+  const showsMetronome = isDrummer
+
   const usingSetlistKey = setlistTranspose !== null
   const transpose = usingSetlistKey ? setlistTranspose : personal.transpose
-  const view = effectiveView(personal, prefs)
+  const view = isDrummer ? 'text' : effectiveView(personal, prefs)
   const currentKey = transposeKey(song.originalKey, transpose)
   // Каподастр не змінює звучання — тільки аплікатуру: показуємо форму акорду
   const shapeKey = transposeKey(currentKey, -personal.capo)
@@ -119,7 +126,14 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             <span className="text-[var(--accent)] font-semibold">{currentKey}</span>
             {transpose !== 0 && <span>({transpose > 0 ? '+' : ''}{transpose})</span>}
             {usingSetlistKey && <span className="text-sky-400">· тональність сету</span>}
-            {song.tempo && <span>· {song.tempo} BPM</span>}
+            {showsMetronome ? (
+              <span className="text-[var(--accent)]">
+                · {personal.metronomeTempo ?? song.tempo ?? '—'} BPM
+                · {personal.metronomeSignature || song.timeSignature || '4/4'}
+              </span>
+            ) : (
+              song.tempo && <span>· {song.tempo} BPM</span>
+            )}
             {capoHint && <span>· {capoHint}</span>}
           </span>
         }
@@ -152,39 +166,48 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       {panel === 'settings' && (
         <div className="no-print border-b border-[var(--line)] bg-[var(--panel)] px-4 py-4 space-y-4">
           <div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Що показувати</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.show')}</div>
             <div className="flex gap-2">
-              <Toggle
-                label="Текст"
-                on={view !== 'grid'}
-                // Вимкнути можна лише щось одне — інакше сторінка буде порожня
-                disabled={view === 'text'}
-                onClick={() => setPersonal(song.id, { viewMode: toView(view === 'grid', true) })}
-              />
-              <Toggle
-                label="Акорди"
-                on={view !== 'text'}
-                disabled={view === 'grid'}
-                onClick={() => setPersonal(song.id, { viewMode: toView(true, view === 'text') })}
-              />
+              {!isDrummer && (
+                <Toggle
+                  label={t('view.text')}
+                  on={view !== 'grid'}
+                  // Вимкнути можна лише щось одне — інакше сторінка буде порожня
+                  disabled={view === 'text'}
+                  onClick={() => setPersonal(song.id, { viewMode: toView(view === 'grid', true) })}
+                />
+              )}
+              {isDrummer && (
+                <span className="text-xs text-[var(--text-faint)] py-1.5">
+                  {t('view.drummerNote')}
+                </span>
+              )}
+              {!isDrummer && (
+                <Toggle
+                  label={t('view.chords')}
+                  on={view !== 'text'}
+                  disabled={view === 'grid'}
+                  onClick={() => setPersonal(song.id, { viewMode: toView(true, view === 'text') })}
+                />
+              )}
               <Button variant="chip" className="ml-auto" onClick={() => setPrefs({ viewMode: view })}
                 title="Зробити це типовим для всіх пісень">
-                за умовчанням
+                {t('view.byDefault')}
               </Button>
             </div>
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">{VIEW_HINT[view]}</div>
           </div>
 
           <div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Як показувати</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.layout')}</div>
             <div className="flex gap-2">
               <Button variant="chip" active={!showOriginal} className="flex-1"
                 onClick={() => setPrefs({ layout: 'parsed' })}>
-                Розібрано
+                {t('view.parsed')}
               </Button>
               <Button variant="chip" active={showOriginal} className="flex-1"
                 onClick={() => setPrefs({ layout: 'original' })}>
-                Точно як в оригіналі
+                {t('view.original')}
               </Button>
             </div>
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
@@ -195,7 +218,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Тональність</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.key')}</div>
             <div className="flex items-center gap-2">
               <Button onClick={() => shift(-1)} disabled={usingSetlistKey}
                 className="w-12 text-lg font-bold" aria-label="Нижче на півтон">−</Button>
@@ -217,13 +240,15 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="text-xs font-medium text-[var(--text-muted)] mb-1.5">
-                Каподастр: <span className="text-[var(--text)]">{personal.capo || '—'}</span>
+            {showsCapo && (
+              <div className="flex-1">
+                <div className="text-xs font-medium text-[var(--text-muted)] mb-1.5">
+                  {t('view.capo')}: <span className="text-[var(--text)]">{personal.capo || '—'}</span>
+                </div>
+                <input type="range" min={0} max={7} value={personal.capo} className="w-full accent-amber-500"
+                  onChange={(e) => setPersonal(song.id, { capo: +e.target.value })} />
               </div>
-              <input type="range" min={0} max={7} value={personal.capo} className="w-full accent-amber-500"
-                onChange={(e) => setPersonal(song.id, { capo: +e.target.value })} />
-            </div>
+            )}
           </div>
 
           <div>
@@ -240,18 +265,54 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             </div>
           </div>
 
+          {showsMetronome && (
+            <div>
+              <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.metronome')}</div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <div className="text-[11px] text-[var(--text-faint)] mb-1">{t('view.tempo')}</div>
+                  <input
+                    type="number" inputMode="numeric" min={30} max={260}
+                    className={inputClass + ' text-center font-mono'}
+                    placeholder={song.tempo ? String(song.tempo) : '—'}
+                    value={personal.metronomeTempo ?? ''}
+                    onChange={(e) => setPersonal(song.id, {
+                      metronomeTempo: e.target.value ? +e.target.value : null,
+                    })}
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="text-[11px] text-[var(--text-faint)] mb-1">{t('view.signature')}</div>
+                  <select
+                    className={inputClass + ' text-center font-mono'}
+                    value={personal.metronomeSignature || song.timeSignature || '4/4'}
+                    onChange={(e) => setPersonal(song.id, { metronomeSignature: e.target.value })}
+                  >
+                    {['4/4', '3/4', '6/8', '2/4', '12/8', '5/4', '7/8'].map((t) => (
+                      <option key={t} value={t} className="bg-[var(--panel)]">{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
+                Твої значення, окремо від пісні. Порожній темп — береться з пісні
+                {song.tempo ? ` (${song.tempo})` : ''}.
+              </div>
+            </div>
+          )}
+
           <div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Колонки</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.columns')}</div>
             <div className="flex gap-2">
               <Button variant="chip" active={prefs.columns !== 2} className="flex-1"
                 onClick={() => setPrefs({ columns: 1 })}>
-                ▌ Одна
+                {t('view.oneColumn')}
               </Button>
               <Button variant="chip" active={prefs.columns === 2} className="flex-1"
                 disabled={showOriginal}
                 onClick={() => setPrefs({ columns: 2, fontSize: Math.min(prefs.fontSize, 15) })}
                 title={showOriginal ? 'Доступно в показі «Розібрано»' : undefined}>
-                ▌▌ Дві
+                {t('view.twoColumns')}
               </Button>
             </div>
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
@@ -262,17 +323,17 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">Акорди</div>
+            <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.chords')}</div>
             <div className="flex gap-2">
               <Button variant="chip" active={editing} className="flex-1"
                 disabled={showOriginal}
                 onClick={() => { setEditing((e) => !e); setPanel('none') }}
                 title={showOriginal ? 'Доступно в показі «Розібрано»' : undefined}>
-                {editing ? '✓ Правлю акорди' : '✏️ Правити акорди'}
+                {editing ? t('view.editingChords') : t('view.editChords')}
               </Button>
               <Button variant="chip" active={prefs.chordsAccent} className="flex-1"
                 onClick={() => setPrefs({ chordsAccent: !prefs.chordsAccent })}>
-                🎵 Акцент на акордах
+                {t('view.chordsAccent')}
               </Button>
             </div>
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
@@ -283,8 +344,8 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
 
           <div className="flex gap-2 pt-1">
-            <Button onClick={onEdit} className="flex-1">Редагувати пісню</Button>
-            <Button onClick={() => window.print()}>Друк</Button>
+            <Button onClick={onEdit} className="flex-1">{t('view.editSong')}</Button>
+            <Button onClick={() => window.print()}>{t('common.print')}</Button>
           </div>
         </div>
       )}
@@ -362,7 +423,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </Button>
           <div className="flex-1 text-center">
             <div className="text-xl font-bold text-[var(--accent)] leading-none">{fontSize}</div>
-            <div className="text-[10px] text-[var(--text-faint)] mt-0.5">розмір тексту</div>
+            <div className="text-[10px] text-[var(--text-faint)] mt-0.5">{t('view.fontSize')}</div>
           </div>
           <Button onClick={() => zoom(1)} disabled={fontSize >= zoomMax}
             className="w-12 text-lg font-bold" aria-label="Більший текст">
@@ -380,23 +441,23 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           onClose={() => setSpot(null)}
           actions={spot.index >= 0 ? [
             {
-              label: 'Посунути ліворуч', icon: '⬅️',
+              label: t('chord.move.left'), icon: '⬅️',
               onClick: () => editSection(spot.sectionId,
                 (b) => moveChord(b, { line: spot.line, index: spot.index }, -1)),
             },
             {
-              label: 'Посунути праворуч', icon: '➡️',
+              label: t('chord.move.right'), icon: '➡️',
               onClick: () => editSection(spot.sectionId,
                 (b) => moveChord(b, { line: spot.line, index: spot.index }, 1)),
             },
-            { label: 'Змінити акорд', icon: '🎸', onClick: () => setPicking(spot) },
+            { label: t('chord.change'), icon: '🎸', onClick: () => setPicking(spot) },
             {
-              label: 'Видалити акорд', icon: '🗑', danger: true,
+              label: t('chord.remove'), icon: '🗑', danger: true,
               onClick: () => editSection(spot.sectionId,
                 (b) => removeChord(b, { line: spot.line, index: spot.index })),
             },
           ] : [
-            { label: 'Поставити акорд тут', icon: '🎸', onClick: () => setPicking(spot) },
+            { label: t('chord.addHere'), icon: '🎸', onClick: () => setPicking(spot) },
           ]}
         />
       )}

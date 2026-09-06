@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import type { AppData, Member, MemberPrefs, Setlist, Song, SongPersonal, ViewMode } from './types'
 import { INSTRUMENTS } from './types'
 import { storage } from './storage'
+import { detectLang, translator } from './i18n'
+import type { Key } from './i18n'
 
 const MEMBER_KEY = 'worship-hub:me'
 
@@ -15,6 +17,7 @@ export const DEFAULT_PREFS: MemberPrefs = {
   theme: 'dark',
   chordsAccent: false,
   columns: 1,
+  lang: detectLang(),
 }
 
 interface Store {
@@ -27,6 +30,8 @@ interface Store {
 
   prefs: MemberPrefs
   setPrefs(patch: Partial<MemberPrefs>): void
+  /** Переклад рядка інтерфейсу поточною мовою учасника */
+  t(key: Key): string
 
   upsertSong(song: Song): void
   deleteSong(id: string): void
@@ -119,6 +124,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
 
     prefs,
+    t: translator(prefs.lang),
     setPrefs(patch) {
       if (!me) return
       setData((d) => ({ ...d, prefs: { ...d.prefs, [me.id]: { ...prefs, ...patch } } }))

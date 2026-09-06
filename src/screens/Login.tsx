@@ -2,14 +2,14 @@ import { useStore } from '../store'
 import { Avatar, InstrumentTags } from '../components/ui'
 
 export default function Login() {
-  const { data, signIn } = useStore()
+  const { data, signIn, t } = useStore()
 
   return (
     <div className="min-h-full flex flex-col justify-center px-6 py-12 max-w-md mx-auto w-full">
       <div className="mb-10 text-center">
         <div className="text-5xl mb-3">🎵</div>
         <h1 className="text-2xl font-bold tracking-tight">Worship Hub</h1>
-        <p className="text-[var(--text-muted)] text-sm mt-1.5">Обери себе, щоб продовжити</p>
+        <p className="text-[var(--text-muted)] text-sm mt-1.5">{t('login.title')}</p>
       </div>
 
       <div className="space-y-2">
@@ -24,7 +24,7 @@ export default function Login() {
             <div className="min-w-0 flex-1">
               <div className="font-semibold flex items-center gap-1.5">
                 {m.name}
-                {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-amber-400/15 px-1.5 py-0.5 rounded">лідер</span>}
+                {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-amber-400/15 px-1.5 py-0.5 rounded">{t('login.leader')}</span>}
               </div>
               <InstrumentTags member={m} />
             </div>
@@ -37,7 +37,7 @@ export default function Login() {
       </div>
 
       <p className="text-center text-xs text-[var(--text-faint)] mt-8 leading-relaxed">
-        Імена й інструменти можна змінити в розділі «Я» → «Учасники».
+        {t('login.hint')}
       </p>
     </div>
   )
