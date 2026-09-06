@@ -34,6 +34,8 @@ interface Store {
   deleteSetlist(id: string): void
   upsertMember(m: Member): void
   deleteMember(id: string): void
+  /** Замінити всі дані одразу — для відновлення з файлу */
+  replaceAll(next: AppData): void
 
   personalFor(songId: string): SongPersonal
   /** Патч може бути функцією — тоді він бачить актуальне значення, а не те,
@@ -160,6 +162,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     deleteMember(id) {
       setData((d) => ({ ...d, members: d.members.filter((m) => m.id !== id) }))
+    },
+
+    replaceAll(next) {
+      setData(next)
     },
 
     personalFor(songId) {

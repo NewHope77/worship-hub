@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { InstrumentId, Member } from '../types'
 import { INSTRUMENTS } from '../types'
 import { useStore } from '../store'
 import { newId } from '../chordpro/parse'
 import { isCloudConnected } from '../storage'
+import { downloadBackup, readBackup, mergeBackup } from '../storage/backup'
 import CloudSetup from './CloudSetup'
 import { TopBar, BackButton, Button, Avatar, InstrumentTags, Field, inputClass } from '../components/ui'
 
@@ -19,10 +20,12 @@ const COLORS = [
 ]
 
 export default function Profile() {
-  const { me, data, prefs, setPrefs, signOut, meId } = useStore()
+  const { me, data, prefs, setPrefs, signOut, meId, replaceAll } = useStore()
   const [editing, setEditing] = useState<Member | null>(null)
   const [showMembers, setShowMembers] = useState(false)
   const [showCloud, setShowCloud] = useState(false)
+  const [backupNote, setBackupNote] = useState('')
+  const backupInput = useRef<HTMLInputElement>(null)
 
   if (!me) return null
 
@@ -137,6 +140,39 @@ export default function Profile() {
         </div>
 
         <div className="space-y-2 pt-2">
+          <div className="text-xs font-medium text-[var(--text-muted)]">Перенесення й копія</div>
+          <input ref={backupInput} type="file" accept=".json,application/json" className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              if (!file) return
+              try {
+                const incoming = await readBackup(file)
+                const { data: merged, added } = mergeBackup(data, incoming)
+                replaceAll(merged)
+                setBackupNote(added ? `Додано пісень: ${added}` : 'Нових пісень не знайшлось')
+              } catch (err) {
+                setBackupNote(err instanceof Error ? err.message : String(err))
+              }
+            }} />
+          <Button className="w-full !justify-between"
+            onClick={() => { downloadBackup(data); setBackupNote('Файл збережено') }}>
+            <span>⬇️ Зберегти базу у файл</span>
+            <span className="text-[var(--text-faint)] text-sm">{data.songs.length} пісень</span>
+          </Button>
+          <Button className="w-full !justify-between" onClick={() => backupInput.current?.click()}>
+            <span>⬆️ Завантажити базу з файлу</span>
+            <span className="text-[var(--text-faint)]">→</span>
+          </Button>
+          {backupNote && (
+            <div className="text-[11px] text-[var(--accent)] px-1">{backupNote}</div>
+          )}
+          <p className="text-[11px] text-[var(--text-faint)] leading-relaxed px-1">
+            Так пісні переносяться на інший телефон або з локальної адреси сюди.
+            Наявні пісні не зникають — додається лише те, чого ще немає.
+          </p>
+
+          <div className="pt-2 text-xs font-medium text-[var(--text-muted)]">Група</div>
           <Button className="w-full !justify-between" onClick={() => setShowCloud(true)}>
             <span>Спільна база</span>
             <span className={`text-sm ${isCloudConnected() ? 'text-emerald-400' : 'text-[var(--text-faint)]'}`}>
