@@ -4,7 +4,7 @@ import { useStore } from '../store'
 import { stripChords } from '../chordpro/parse'
 import { TopBar, Button, Empty, inputClass } from '../components/ui'
 import { useLongPress } from '../components/LongPress'
-import { SortableList, SortableRow } from '../components/Sortable'
+import { SortableList, SortableRow, DragHandle } from '../components/Sortable'
 import ActionSheet from '../components/ActionSheet'
 
 interface Props {
@@ -20,6 +20,10 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
   // Пісня, на якій затримали палець — для неї показуємо меню дій
   const [menuFor, setMenuFor] = useState<Song | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<Song | null>(null)
+  // Окремий режим упорядкування: тоді тап нічого не відкриває, а тягнути
+  // можна за ручку. Так жести не конкурують — це надійніше, ніж розводити
+  // «тримаю» і «тримаю та тягну» на одному дотику.
+  const [reordering, setReordering] = useState(false)
 
   const allTags = useMemo(() => {
     const set = new Set<string>()
@@ -56,16 +60,31 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
 
   // Переставляти можна лише коли видно весь список: інакше перетягування
   // всередині відфільтрованого шматка зіпсувало б порядок решти
-  const canReorder = !q.trim() && !tag
+  const canReorder = reordering && !q.trim() && !tag
 
   return (
     <div className="min-h-full flex flex-col">
       <TopBar
         title={t('songs.title')}
         subtitle={`${data.songs.length} ${t('songs.count')}`}
-        right={<Button variant="primary" onClick={onNew} className="!px-3 !py-2">{t('songs.add')}</Button>}
+        right={
+          <div className="flex items-center gap-1.5">
+            {data.songs.length > 1 && (
+              <Button variant={reordering ? 'primary' : 'ghost'} className="!px-3 !py-2"
+                onClick={() => { setReordering((v) => !v); setQ(''); setTag(null) }}>
+                {reordering ? t('songs.reorderDone') : `⇅ ${t('songs.reorder')}`}
+              </Button>
+            )}
+            {!reordering && (
+              <Button variant="primary" onClick={onNew} className="!px-3 !py-2">{t('songs.add')}</Button>
+            )}
+          </div>
+        }
       />
 
+      {reordering ? (
+        <div className="px-4 pt-3 text-xs text-[var(--text-muted)]">{t('songs.reorderHint')}</div>
+      ) : (
       <div className="px-3 pt-3 space-y-2">
         <input className={inputClass} placeholder={t('songs.searchPlaceholder')}
           value={q} onChange={(e) => setQ(e.target.value)} />
@@ -79,6 +98,7 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
           </div>
         )}
       </div>
+      )}
 
       {filtered.length === 0 ? (
         <Empty
@@ -100,14 +120,19 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
                 {filtered.map((s) => (
                   <SortableRow key={s.id} id={s.id}>
                     {(handle) => (
-                      <SongRow
-                        song={s}
-                        hasNote={personalFor(s.id).note.trim().length > 0}
-                        noteLabel={t('songs.hasNote')}
-                        onOpen={() => onOpen(s)}
-                        onHold={() => setMenuFor(s)}
-                        dragProps={{ ...handle.attributes, ...handle.listeners }}
-                      />
+                      <div className="flex items-center gap-1 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] pr-1">
+                        <div className="min-w-0 flex-1 p-3">
+                          <div className="font-semibold truncate">{s.title}</div>
+                          <div className="text-xs text-[var(--text-faint)] truncate">
+                            {s.author || '—'}
+                          </div>
+                        </div>
+                        <span className="shrink-0 font-mono font-bold text-[var(--accent)] text-sm px-1">
+                          {s.originalKey}
+                        </span>
+                        {/* Велика ручка — щоб упевнено влучити пальцем */}
+                        <div className="scale-125 px-1"><DragHandle {...handle} /></div>
+                      </div>
                     )}
                   </SortableRow>
                 ))}
@@ -125,9 +150,11 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
               />
             ))
           )}
-          <p className="text-center text-[11px] text-[var(--text-faint)] pt-3 pb-1">
-            {t('songs.holdHint')}
-          </p>
+          {!reordering && (
+            <p className="text-center text-[11px] text-[var(--text-faint)] pt-3 pb-1">
+              {t('songs.holdHint')}
+            </p>
+          )}
         </div>
       )}
 
@@ -164,28 +191,17 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
 }
 
 /** Рядок списку: тап відкриває, довге натискання — меню дій */
-function SongRow({ song, hasNote, noteLabel, onOpen, onHold, dragProps }: {
+function SongRow({ song, hasNote, noteLabel, onOpen, onHold }: {
   song: Song; hasNote: boolean; noteLabel: string; onOpen(): void; onHold(): void
-  dragProps?: Record<string, unknown>
 }) {
-  // Тримати й не рухати — меню; тримати й потягнути — перенесення.
-  // Рух скасовує довге натискання, тож жести не сперечаються.
-  const { handlers, consumedClick } = useLongPress(onHold, 520)
-
-  // Обидва жести слухають ті самі події, тож обробники треба зчепити,
-  // інакше другий набір мовчки перекриє перший
-  const merged: Record<string, unknown> = { ...dragProps }
-  for (const [name, fn] of Object.entries(handlers)) {
-    const fromDrag = dragProps?.[name]
-    merged[name] = typeof fromDrag === 'function'
-      ? (e: unknown) => { (fromDrag as (x: unknown) => void)(e); (fn as (x: unknown) => void)(e) }
-      : fn
-  }
+  // Порядок міняється в окремому режимі, тож тут лишається один жест:
+  // утримання відкриває меню дій
+  const { handlers, consumedClick } = useLongPress(onHold)
 
   return (
     <button
       onClick={() => { if (!consumedClick()) onOpen() }}
-      {...merged}
+      {...handlers}
       className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)]
                  hover:bg-[var(--surface-hover)] active:scale-[0.99] transition text-left select-none touch-manipulation"
     >

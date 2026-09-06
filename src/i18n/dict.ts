@@ -29,6 +29,8 @@ const uk = {
   'songs.emptyHint': 'Додай першу пісню — можна просто вставити текст, застосунок сам поріже його на куплети.',
   'songs.notFound': 'Нічого не знайшлось',
   'songs.hasNote': 'є нотатка',
+  'songs.reorder': 'Порядок', 'songs.reorderDone': 'Готово',
+  'songs.reorderHint': 'Тягни за ручку ⠿ праворуч, щоб змінити порядок',
 
   'view.show': 'Що показувати', 'view.text': 'Текст', 'view.chords': 'Акорди',
   'view.byDefault': 'за умовчанням',
@@ -100,6 +102,8 @@ const ru: Record<Key, string> = {
   'songs.emptyHint': 'Добавь первую песню — можно просто вставить текст, приложение само разобьёт его на куплеты.',
   'songs.notFound': 'Ничего не найдено',
   'songs.hasNote': 'есть заметка',
+  'songs.reorder': 'Порядок', 'songs.reorderDone': 'Готово',
+  'songs.reorderHint': 'Тяни за ручку ⠿ справа, чтобы изменить порядок',
 
   'view.show': 'Что показывать', 'view.text': 'Текст', 'view.chords': 'Аккорды',
   'view.byDefault': 'по умолчанию',
@@ -169,6 +173,8 @@ const en: Record<Key, string> = {
   'songs.emptyHint': 'Add your first song — just paste the text, the app will split it into verses.',
   'songs.notFound': 'Nothing found',
   'songs.hasNote': 'has a note',
+  'songs.reorder': 'Reorder', 'songs.reorderDone': 'Done',
+  'songs.reorderHint': 'Drag the ⠿ handle on the right to change the order',
 
   'view.show': 'What to show', 'view.text': 'Lyrics', 'view.chords': 'Chords',
   'view.byDefault': 'make default',
