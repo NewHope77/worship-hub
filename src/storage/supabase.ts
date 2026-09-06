@@ -52,15 +52,16 @@ export function createSupabaseAdapter(config: CloudConfig): StorageAdapter {
   })
 
   const pull = async (): Promise<AppData> => {
-    const [members, songs, setlists, personal, prefs] = await Promise.all([
+    const [members, songs, setlists, personal, prefs, shared] = await Promise.all([
       client.from('members').select('id,data'),
       client.from('songs').select('id,data'),
       client.from('setlists').select('id,data'),
       client.from('personal').select('id,data'),
       client.from('prefs').select('id,data'),
+      client.from('shared').select('id,data'),
     ])
 
-    const firstError = [members, songs, setlists, personal, prefs].find((r) => r.error)?.error
+    const firstError = [members, songs, setlists, personal, prefs, shared].find((r) => r.error)?.error
     if (firstError) throw new Error(firstError.message)
 
     const seed = seedData()
@@ -76,6 +77,9 @@ export function createSupabaseAdapter(config: CloudConfig): StorageAdapter {
       setlists: migrateSetlists(rows<Setlist>(setlists)),
       personal: rows<SongPersonal>(personal),
       prefs: Object.fromEntries(prefsRows.map((r) => [r.id, r.data as MemberPrefs])),
+      // Порядок пісень спільний: група бачить список однаково
+      songOrder: ((shared.data ?? []) as Row[])
+        .find((r) => r.id === 'songOrder')?.data as string[] ?? [],
     }
   }
 
@@ -120,6 +124,12 @@ export function createSupabaseAdapter(config: CloudConfig): StorageAdapter {
       sync('songs', diff(before.songs, data.songs))
       sync('setlists', diff(before.setlists, data.setlists))
       sync('personal', diff(before.personal, data.personal))
+
+      if (JSON.stringify(before.songOrder ?? []) !== JSON.stringify(data.songOrder ?? [])) {
+        jobs.push(client.from('shared').upsert({
+          id: 'songOrder', data: data.songOrder ?? [], updated_at: new Date().toISOString(),
+        }))
+      }
 
       // Налаштування учасника ключуються його id, а не полем усередині
       for (const [memberId, value] of Object.entries(data.prefs)) {
