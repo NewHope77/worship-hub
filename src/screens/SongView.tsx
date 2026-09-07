@@ -485,19 +485,38 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       )}
 
       <div className={`no-print sticky bottom-0 px-3 pb-safe${immersive ? ' hidden' : ''}`}>
-        <div className="glass-bar flex items-center gap-2 rounded-3xl p-2 mb-3">
-          <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
-            className="w-12 text-lg font-bold" aria-label="Дрібніший текст">
-            A−
-          </Button>
-          <div className="flex-1 text-center">
-            <div className="text-xl font-bold text-[var(--accent)] leading-none">{fontSize}</div>
-            <div className="text-[10px] text-[var(--text-faint)] mt-0.5">{t('view.fontSize')}</div>
-          </div>
-          <Button onClick={() => zoom(1)} disabled={fontSize >= zoomMax}
-            className="w-12 text-lg font-bold" aria-label="Більший текст">
-            A+
-          </Button>
+        {/* Швидкі дії — те, що міняють просто під час гри */}
+        <div className="glass-bar flex items-center justify-around gap-1 rounded-3xl p-2 mb-3">
+          <QuickButton
+            label={t('view.columns')}
+            active={prefs.columns === 2}
+            disabled={showOriginal}
+            onClick={() => setPrefs({
+              columns: prefs.columns === 2 ? 1 : 2,
+              // Дві колонки при великому шрифті нечитабельні — підганяємо одразу
+              fontSize: prefs.columns === 2 ? prefs.fontSize : Math.min(prefs.fontSize, 15),
+            })}
+          >
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <line x1="12" y1="4" x2="12" y2="20" />
+          </QuickButton>
+
+          <QuickButton label={t('view.scale')} disabled={fontSize >= zoomMax} onClick={() => zoom(1)}>
+            <circle cx="11" cy="11" r="7" />
+            <line x1="20" y1="20" x2="16.5" y2="16.5" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </QuickButton>
+
+          <QuickButton label={t('view.scale')} disabled={fontSize <= zoomMin} onClick={() => zoom(-1)}>
+            <circle cx="11" cy="11" r="7" />
+            <line x1="20" y1="20" x2="16.5" y2="16.5" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </QuickButton>
+
+          <QuickButton label={t('view.fullscreen')} onClick={toggleImmersive}>
+            <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" />
+          </QuickButton>
         </div>
       </div>
 
@@ -548,6 +567,34 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         />
       )}
     </div>
+  )
+}
+
+/** Кругла кнопка швидкої дії — сама іконка передається як вміст svg */
+function QuickButton({ label, active, disabled, onClick, children }: {
+  label: string
+  active?: boolean
+  disabled?: boolean
+  onClick(): void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      aria-pressed={active}
+      className={`w-14 h-14 rounded-full grid place-items-center transition active:scale-90
+        disabled:opacity-30 ${
+        active
+          ? 'bg-gradient-to-b from-amber-300 to-amber-500 text-slate-950'
+          : 'glass text-[var(--text)]'}`}
+    >
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {children}
+      </svg>
+    </button>
   )
 }
 
