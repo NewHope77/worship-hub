@@ -1,9 +1,10 @@
 import { useStore } from '../store'
 import { Avatar, InstrumentTags } from '../components/ui'
 import InstallHint from '../components/InstallHint'
+import { LANGS } from '../i18n'
 
 export default function Login() {
-  const { data, signIn, t } = useStore()
+  const { data, signIn, t, prefs, setPrefs } = useStore()
 
   return (
     <div className="min-h-full flex flex-col justify-center px-6 py-12 max-w-md mx-auto w-full">
@@ -37,6 +38,22 @@ export default function Login() {
       </div>
 
       {/* Найперший екран — саме тут доречно нагадати встановити застосунок */}
+      {/* Мова — тут, бо профілю ще немає, а зайти має бути зрозуміло кожному */}
+      <div className="flex gap-2 mt-7">
+        {LANGS.map((l) => (
+          <button
+            key={l.id}
+            onClick={() => setPrefs({ lang: l.id })}
+            className={`flex-1 rounded-2xl py-2.5 text-sm font-semibold transition active:scale-95 ${
+              prefs.lang === l.id
+                ? 'bg-gradient-to-b from-amber-300 to-amber-500 text-slate-950 border border-white/25'
+                : 'glass text-[var(--text-muted)]'}`}
+          >
+            {l.flag} {l.label}
+          </button>
+        ))}
+      </div>
+
       <div className="mt-6 -mx-3">
         <InstallHint />
       </div>

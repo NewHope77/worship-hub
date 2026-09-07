@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import type { AppData, Member, MemberPrefs, Setlist, Song, SongPersonal, ViewMode } from './types'
 import { INSTRUMENTS } from './types'
 import { storage } from './storage'
-import { detectLang, translator } from './i18n'
+import { detectLang, translator, saveStoredLang } from './i18n'
 import type { Key } from './i18n'
 
 const MEMBER_KEY = 'worship-hub:me'
@@ -63,6 +63,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(EMPTY)
   const [ready, setReady] = useState(false)
   const [meId, setMeId] = useState<string | null>(() => localStorage.getItem(MEMBER_KEY))
+  // Перемальовує екран входу після зміни мови, коли учасника ще немає
+  const [langTick, setLangTick] = useState(0)
   // Не записуємо назад те, що щойно прилетіло ззовні
   const skipSave = useRef(true)
 
@@ -93,13 +95,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   const prefs = useMemo<MemberPrefs>(() => {
-    if (!me) return DEFAULT_PREFS
+    // Учасника ще не обрано — беремо мову, збережену на пристрої
+    if (!me) return { ...DEFAULT_PREFS, lang: detectLang() }
     const saved = data.prefs[me.id]
     if (saved) return { ...DEFAULT_PREFS, ...saved }
     // Перший вхід — беремо режим із головного інструмента
     const primary = INSTRUMENTS.find((i) => i.id === me.instruments[0])
     return { ...DEFAULT_PREFS, viewMode: primary?.defaultView ?? 'chords' }
-  }, [me, data.prefs])
+  }, [me, data.prefs, langTick])
 
   // Тема живе на <html>, щоб фон сторінки й системні елементи змінювались разом
   useEffect(() => {
@@ -128,7 +131,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     prefs,
     t: translator(prefs.lang),
     setPrefs(patch) {
-      if (!me) return
+      // Мову можна змінити ще до входу — тоді зберігаємо її на пристрої
+      if (patch.lang) saveStoredLang(patch.lang)
+      if (!me) {
+        if (patch.lang) setLangTick((n) => n + 1)
+        return
+      }
       setData((d) => ({ ...d, prefs: { ...d.prefs, [me.id]: { ...prefs, ...patch } } }))
     },
 
