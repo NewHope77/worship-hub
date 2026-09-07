@@ -69,7 +69,11 @@ export default function App() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <div className="flex-1 pb-24">
+      {/*
+        Запас під вкладки: вони стали вищими (скляні картки), плюс на телефонах
+        знизу є безпечна зона. Без цього кінець сторінки ховається під ними.
+      */}
+      <div className="flex-1 pb-[calc(7rem+env(safe-area-inset-bottom,0px))]">
         {tab === 'songs' && (
           <SongList
             onOpen={(s) => setRoute({ name: 'song', songId: s.id, setlistTranspose: null })}
