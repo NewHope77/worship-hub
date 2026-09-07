@@ -40,6 +40,8 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   const [editing, setEditing] = useState(false)
   const [spot, setSpot] = useState<ChordSpot | null>(null)
   const [picking, setPicking] = useState<ChordSpot | null>(null)
+  // Повний екран: лишається тільки пісня
+  const [immersive, setImmersive] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Що показувати — залежить від інструмента: барабанщику акорди не потрібні,
@@ -55,6 +57,28 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   const currentKey = transposeKey(song.originalKey, transpose)
   // Каподастр не змінює звучання — тільки аплікатуру: показуємо форму акорду
   const shapeKey = transposeKey(currentKey, -personal.capo)
+
+  /**
+   * На весь екран. Крім приховування власних панелей просимо й браузер
+   * сховати свої — на Android це прибирає адресний рядок; на iPhone такого
+   * дозволу немає, тож там лишається просто наш чистий екран.
+   */
+  const toggleImmersive = () => {
+    const next = !immersive
+    setImmersive(next)
+    if (next) {
+      document.documentElement.requestFullscreen?.().catch(() => { /* браузер відмовив */ })
+    } else if (document.fullscreenElement) {
+      void document.exitFullscreen?.().catch(() => {})
+    }
+  }
+
+  // Вихід системним жестом теж має повертати панелі
+  useEffect(() => {
+    const onChange = () => { if (!document.fullscreenElement) setImmersive(false) }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
 
   // Не даємо екрану згаснути під час гри
   useEffect(() => {
@@ -128,6 +152,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
      * лишається під нижньою панеллю — дістати його неможливо.
      */
     <div className="h-[100dvh] flex flex-col overflow-hidden">
+      {!immersive && (
       <TopBar
         left={<BackButton onClick={onBack} />}
         title={song.title}
@@ -160,6 +185,14 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
                 <span className="absolute translate-x-3 -translate-y-3 w-2 h-2 rounded-full bg-amber-400" />
               )}
             </button>
+            <button onClick={toggleImmersive} aria-label={t('view.fullscreen')}
+              className="w-9 h-9 grid place-items-center rounded-full transition
+                         hover:bg-[var(--surface-hover)] text-[var(--text)]">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
+              </svg>
+            </button>
             <button onClick={() => setPanel(panel === 'settings' ? 'none' : 'settings')}
               aria-label="Налаштування"
               className={`w-9 h-9 grid place-items-center rounded-full transition ${
@@ -172,8 +205,9 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
           </div>
         }
       />
+      )}
 
-      {panel === 'settings' && (
+      {panel === 'settings' && !immersive && (
         <div className="no-print glass-bar rounded-3xl mx-3 mt-3 px-4 py-4 space-y-4 relative z-20">
           <div>
             <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.show')}</div>
@@ -368,7 +402,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         </div>
       )}
 
-      {panel === 'note' && (
+      {panel === 'note' && !immersive && (
         <div className="no-print glass-bar rounded-3xl mx-3 mt-3 px-4 py-4 space-y-3 relative z-20">
           {song.notes.trim() && (
             <div>
@@ -435,7 +469,22 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       </div>
 
       {/* Нижня панель: розмір тексту — його міняють найчастіше */}
-      <div className="no-print sticky bottom-0 px-3 pb-safe">
+      {immersive && (
+        // У повному екрані лишається одна кнопка — вихід
+        <button
+          onClick={toggleImmersive}
+          aria-label={t('view.exitFullscreen')}
+          className="no-print fixed top-3 right-3 z-40 w-11 h-11 grid place-items-center
+                     rounded-full glass-bar text-[var(--text-muted)] active:scale-90 transition"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 8V5a1 1 0 0 1 1-1h3M20 8V5a1 1 0 0 0-1-1h-3M4 16v3a1 1 0 0 0 1 1h3M20 16v3a1 1 0 0 1-1 1h-3" />
+          </svg>
+        </button>
+      )}
+
+      <div className={`no-print sticky bottom-0 px-3 pb-safe${immersive ? ' hidden' : ''}`}>
         <div className="glass-bar flex items-center gap-2 rounded-3xl p-2 mb-3">
           <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
             className="w-12 text-lg font-bold" aria-label="Дрібніший текст">
