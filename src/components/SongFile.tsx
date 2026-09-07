@@ -35,6 +35,28 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
     }
   }, [songId])
 
+  /**
+   * Віддаємо файл системі, а не браузеру: інакше Chrome пропонує «завантажити
+   * ще раз» під випадковим ім'ям, хоча файл уже лежить у застосунку.
+   * Через системний вибір застосунку Word відкриє документ одразу.
+   */
+  const openOriginal = async () => {
+    if (!file) return
+    const asFile = new File([file.blob], file.name, { type: file.type })
+
+    if (navigator.canShare?.({ files: [asFile] })) {
+      try {
+        await navigator.share({ files: [asFile], title: file.name })
+        return
+      } catch {
+        // Користувач закрив вибір застосунку — нічого не робимо
+        return
+      }
+    }
+    // Системного вибору немає (наприклад, на комп'ютері) — відкриваємо як є
+    if (url) window.open(url, '_blank', 'noopener')
+  }
+
   if (state === 'loading') {
     return <div className="px-4 py-8 text-center text-sm text-[var(--text-faint)]">Відкриваю файл…</div>
   }
@@ -87,8 +109,7 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
             Це документ Word — відкриється у застосунку телефона, який працює
             з такими файлами.
           </p>
-          <Button variant="primary" className="w-full"
-            onClick={() => window.open(url, '_blank', 'noopener')}>
+          <Button variant="primary" className="w-full" onClick={openOriginal}>
             Відкрити оригінал
           </Button>
         </div>
