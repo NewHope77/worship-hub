@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { readSongFile, isViewableInBrowser, formatSize } from '../storage/files'
 import type { StoredFile } from '../storage/files'
 import { Button } from './ui'
+import { renderDocx } from '../import/renderDocx'
+import type { DocxBlock } from '../import/renderDocx'
 
 /**
  * Показ оригіналу, з якого пісню імпортували: PDF з нотами, знімок, документ.
@@ -11,6 +13,9 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
   const [file, setFile] = useState<StoredFile | null>(null)
   const [url, setUrl] = useState<string | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
+  /** Word малюємо самі: браузер такого формату не показує */
+  const [docx, setDocx] = useState<DocxBlock[] | null>(null)
+  const [docxFailed, setDocxFailed] = useState(false)
 
   useEffect(() => {
     let objectUrl: string | null = null
@@ -40,6 +45,17 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
    * ще раз» під випадковим ім'ям, хоча файл уже лежить у застосунку.
    * Через системний вибір застосунку Word відкриє документ одразу.
    */
+  // Word розбираємо й показуємо як документ — з накресленням і вирівнюванням
+  useEffect(() => {
+    if (!file || isViewableInBrowser(file.type)) return
+    if (!/\.docx$/i.test(file.name)) { setDocxFailed(true); return }
+    let alive = true
+    renderDocx(file.blob)
+      .then((blocks) => { if (alive) setDocx(blocks) })
+      .catch(() => { if (alive) setDocxFailed(true) })
+    return () => { alive = false }
+  }, [file])
+
   /** Останній шлях: віддати файл через посилання із правильним ім'ям */
   const handOver = () => {
     if (!url || !file) return
@@ -110,22 +126,41 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
           className="w-full rounded-xl border border-[var(--line)] bg-white"
           style={{ height: '75vh' }}
         />
-      ) : (
-        /*
-         * Word та подібні формати браузер малювати не вміє. Не переписуємо їх
-         * і не показуємо замінник — віддаємо оригінал системі, хай його
-         * відкриє застосунок, який цей формат розуміє.
-         */
+      ) : docx ? (
+        // Сторінка документа: біле полотно, як у Word
+        <div className="rounded-2xl bg-white text-[#111] px-5 py-6 shadow-lg overflow-x-auto">
+          {docx.map((b, i) => (
+            <p
+              key={i}
+              style={{
+                textAlign: b.align,
+                fontWeight: b.bold || b.heading ? 700 : 400,
+                fontStyle: b.italic ? 'italic' : undefined,
+                textDecoration: b.underline ? 'underline' : undefined,
+                fontSize: b.heading ? '1.25em' : b.size ? `${b.size}pt` : undefined,
+                whiteSpace: 'pre-wrap',
+                margin: b.text.trim() ? '0 0 0.55em' : '0 0 0.9em',
+                lineHeight: 1.45,
+              }}
+            >
+              {b.text.trim() ? b.text : '\u00A0'}
+            </p>
+          ))}
+        </div>
+      ) : docxFailed ? (
         <div className="px-6 py-8 text-center">
           <div className="text-5xl mb-4">📄</div>
           <div className="font-semibold mb-1">{file.name}</div>
           <p className="text-xs text-[var(--text-muted)] mb-5 leading-relaxed max-w-xs mx-auto">
-            Це документ Word — відкриється у застосунку телефона, який працює
-            з такими файлами.
+            Цей формат показати не вдалося — відкрий його застосунком телефона.
           </p>
           <Button variant="primary" className="w-full" onClick={openOriginal}>
             Відкрити оригінал
           </Button>
+        </div>
+      ) : (
+        <div className="px-6 py-8 text-center text-sm text-[var(--text-faint)]">
+          Відкриваю документ…
         </div>
       )}
 
