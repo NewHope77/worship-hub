@@ -7,6 +7,7 @@ import SongView from './screens/SongView'
 import SongEditor from './screens/SongEditor'
 import Profile from './screens/Profile'
 import { SetlistList, SetlistView } from './screens/Setlists'
+import InstallHint from './components/InstallHint'
 
 type Tab = 'songs' | 'setlists' | 'me'
 
@@ -85,6 +86,11 @@ export default function App() {
           <SetlistList onOpen={(sl) => setRoute({ name: 'setlist', setlistId: sl.id })} />
         )}
         {tab === 'me' && <Profile />}
+      </div>
+
+      {/* Нагадування встановити — зникає, щойно застосунок додано на екран */}
+      <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] inset-x-0 z-30 max-w-lg mx-auto">
+        <InstallHint />
       </div>
 
       {/* Вкладки — окремі скляні картки, під палець */}
