@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { readSongFile, isViewableInBrowser, formatSize } from '../storage/files'
+import { readSongFile as extractText } from '../import/files'
 import type { StoredFile } from '../storage/files'
 import { Button } from './ui'
 
@@ -11,6 +12,8 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
   const [file, setFile] = useState<StoredFile | null>(null)
   const [url, setUrl] = useState<string | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
+  /** Вміст документів, які браузер показати не вміє — витягуємо самі */
+  const [extracted, setExtracted] = useState<string | null>(null)
 
   useEffect(() => {
     let objectUrl: string | null = null
@@ -34,6 +37,17 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [songId])
+
+  // Word та інші «непереглядні» формати показуємо текстом: сам застосунок
+  // уміє їх читати, тож немає причин відмовляти користувачу
+  useEffect(() => {
+    if (!file || isViewableInBrowser(file.type)) return
+    let alive = true
+    extractText(new File([file.blob], file.name, { type: file.type }))
+      .then((r) => { if (alive) setExtracted(r.text) })
+      .catch(() => { if (alive) setExtracted('') })
+    return () => { alive = false }
+  }, [file])
 
   if (state === 'loading') {
     return <div className="px-4 py-8 text-center text-sm text-[var(--text-faint)]">Відкриваю файл…</div>
@@ -74,12 +88,22 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
           className="w-full rounded-xl border border-[var(--line)] bg-white"
           style={{ height: '75vh' }}
         />
+      ) : extracted === null ? (
+        <div className="px-6 py-8 text-center text-sm text-[var(--text-faint)]">
+          Читаю документ…
+        </div>
+      ) : extracted.trim() ? (
+        <div className="glass-reading rounded-2xl px-3 py-3 overflow-x-auto">
+          <pre className="font-mono text-[13px] leading-snug whitespace-pre text-[var(--text)]">
+            {extracted}
+          </pre>
+        </div>
       ) : (
         <div className="px-6 py-10 text-center">
           <div className="text-4xl mb-3 opacity-60">📎</div>
-          <div className="font-semibold mb-1">Цей тип браузер не показує</div>
+          <div className="font-semibold mb-1">Не вдалося прочитати вміст</div>
           <p className="text-xs text-[var(--text-muted)] mb-4">
-            Документи Word відкриваються лише у зовнішньому застосунку.
+            Файл можна зберегти й відкрити у застосунку, який знає цей формат.
           </p>
         </div>
       )}
