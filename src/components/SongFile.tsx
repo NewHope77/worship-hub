@@ -40,6 +40,19 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
    * ще раз» під випадковим ім'ям, хоча файл уже лежить у застосунку.
    * Через системний вибір застосунку Word відкриє документ одразу.
    */
+  /** Останній шлях: віддати файл через посилання із правильним ім'ям */
+  const handOver = () => {
+    if (!url || !file) return
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.name
+    // Клік по створеному посиланню надійніший за відкриття вікна:
+    // після очікування браузер таке вікно зазвичай блокує
+    document.body.append(a)
+    a.click()
+    a.remove()
+  }
+
   const openOriginal = async () => {
     if (!file) return
     const asFile = new File([file.blob], file.name, { type: file.type })
@@ -48,13 +61,14 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
       try {
         await navigator.share({ files: [asFile], title: file.name })
         return
-      } catch {
-        // Користувач закрив вибір застосунку — нічого не робимо
+      } catch (e) {
+        // Скасував сам користувач — так і лишаємо; інакше пробуємо інакше
+        if (e instanceof Error && e.name === 'AbortError') return
+        handOver()
         return
       }
     }
-    // Системного вибору немає (наприклад, на комп'ютері) — відкриваємо як є
-    if (url) window.open(url, '_blank', 'noopener')
+    handOver()
   }
 
   if (state === 'loading') {
@@ -115,9 +129,7 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
         </div>
       )}
 
-      <a href={url} download={file.name} className="block">
-        <Button className="w-full">⬇️ Зберегти файл</Button>
-      </a>
+      <Button className="w-full" onClick={handOver}>⬇️ Зберегти файл</Button>
     </div>
   )
 }
