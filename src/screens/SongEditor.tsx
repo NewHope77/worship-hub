@@ -315,7 +315,7 @@ export default function SongEditor({ song, onDone }: Props) {
               {rows.map(({ key, section }) => (
                 <SortableRow key={key} id={key}>
                   {(handle) => (
-                    <div className="rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] overflow-hidden">
+                    <div className="rounded-3xl glass overflow-hidden">
                       <div className="flex items-center gap-1 pl-1 pr-2 py-1.5 bg-[var(--surface-1)]">
                         <DragHandle {...handle} />
                         <input
@@ -399,7 +399,7 @@ function ArrangementEditor({ draft, patch }: { draft: Song; patch(p: Partial<Son
           {rows.map((r, i) => (
             <SortableRow key={r.key} id={r.key}>
               {(handle) => (
-                <div className="flex items-center gap-1 rounded-xl bg-[var(--surface-2)] border border-[var(--line)] pl-1 pr-2">
+                <div className="flex items-center gap-1 rounded-2xl glass pl-1 pr-2">
                   <DragHandle {...handle} />
                   <span className="text-[11px] text-[var(--text-faint)] font-mono w-5">{i + 1}</span>
                   <span className={`flex-1 text-sm font-medium py-2.5 ${SECTION_KINDS[r.section!.kind].color.split(' ')[0]}`}>

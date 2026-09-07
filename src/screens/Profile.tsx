@@ -7,7 +7,7 @@ import { newId } from '../chordpro/parse'
 import { isCloudConnected } from '../storage'
 import { downloadBackup, readBackup, mergeBackup } from '../storage/backup'
 import CloudSetup from './CloudSetup'
-import { TopBar, BackButton, Button, Avatar, InstrumentTags, Field, inputClass } from '../components/ui'
+import { TopBar, BackButton, Button, Avatar, InstrumentTags, Field, inputClass, instrumentKey } from '../components/ui'
 
 const COLORS = [
   'from-violet-500 to-fuchsia-500',
@@ -54,7 +54,7 @@ export default function Profile() {
         <div className="flex-1 px-3 py-3 space-y-1.5">
           {data.members.map((m) => (
             <button key={m.id} onClick={() => setEditing(m)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] hover:bg-[var(--surface-hover)] text-left">
+              className="w-full flex items-center gap-3 p-3 rounded-3xl glass hover:bg-[var(--surface-hover)] text-left">
               <Avatar member={m} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold flex items-center gap-1.5">
@@ -98,7 +98,7 @@ export default function Profile() {
             </Field>
           ) : (
           <Field label={t('profile.showDefault')}
-            hint={primary ? `для інструмента «${primary.name}» зазвичай найзручніше` : undefined}>
+            hint={primary ? `${t('profile.instrumentHint')} «${t(instrumentKey(primary.id))}»` : undefined}>
             <div className="flex gap-2">
               <Button variant="chip" active={prefs.viewMode !== 'grid'} className="flex-1"
                 disabled={prefs.viewMode === 'text'}
@@ -264,7 +264,7 @@ function MemberEditor({ member, onDone }: { member: Member; onDone(): void }) {
             {INSTRUMENTS.map((i) => (
               <Button key={i.id} variant="chip" active={draft.instruments.includes(i.id)}
                 onClick={() => toggleInstrument(i.id)}>
-                {i.emoji} {i.name}
+                {i.emoji} {t(instrumentKey(i.id))}
               </Button>
             ))}
           </div>

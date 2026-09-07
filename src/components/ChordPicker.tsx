@@ -23,7 +23,7 @@ export default function ChordPicker({ initial, title, onCancel, onConfirm }: {
     <div className="fixed inset-0 z-50 flex flex-col justify-end" role="dialog" aria-label={title}>
       <button aria-label="Закрити" onClick={onCancel}
         className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm" />
-      <div className="relative bg-[var(--panel)] border-t border-[var(--line)] rounded-t-3xl p-4 pb-safe space-y-4">
+      <div className="relative glass rounded-t-3xl !border-b-0 p-4 pb-safe space-y-4">
         <div className="w-10 h-1 rounded-full bg-[var(--line-strong)] mx-auto" />
         <div className="font-semibold">{title}</div>
 

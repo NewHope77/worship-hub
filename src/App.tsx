@@ -69,7 +69,7 @@ export default function App() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <div className="flex-1 pb-16">
+      <div className="flex-1 pb-24">
         {tab === 'songs' && (
           <SongList
             onOpen={(s) => setRoute({ name: 'song', songId: s.id, setlistTranspose: null })}
@@ -83,14 +83,18 @@ export default function App() {
         {tab === 'me' && <Profile />}
       </div>
 
-      <nav className="no-print fixed bottom-0 inset-x-0 z-40 bg-[var(--bg)]/92 backdrop-blur-xl border-t border-[var(--line)] pb-safe">
-        <div className="flex max-w-lg mx-auto">
+      {/* Вкладки — окремі скляні картки, під палець */}
+      <nav className="no-print fixed bottom-0 inset-x-0 z-40 px-3 pb-safe">
+        <div className="flex gap-2 max-w-lg mx-auto pb-3">
           {TABS.map((item) => (
             <button key={item.id} onClick={() => setTab(item.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition active:scale-95 ${
-                tab === item.id ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text)]'}`}>
-              <span className="text-lg leading-none">{item.icon}</span>
-              <span className="text-[11px] font-medium">{t(item.labelKey)}</span>
+              className={`glass flex-1 flex flex-col items-center justify-center gap-0.5 h-16
+                rounded-3xl transition active:scale-95 ${
+                tab === item.id
+                  ? 'text-[var(--accent)] !bg-[var(--glass-strong)]'
+                  : 'text-[var(--text-muted)]'}`}>
+              <span className="text-xl leading-none">{item.icon}</span>
+              <span className="text-[11px] font-semibold">{t(item.labelKey)}</span>
             </button>
           ))}
         </div>

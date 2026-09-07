@@ -1,6 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import type { Member } from '../types'
+import type { InstrumentId, Member } from '../types'
 import { INSTRUMENTS } from '../types'
+import { useStore } from '../store'
+import type { Key } from '../i18n'
+
+/** Ключ перекладу для інструмента — назви живуть у словнику, а не в коді */
+export function instrumentKey(id: InstrumentId): Key {
+  return `instrument.${id}` as Key
+}
 
 export function Avatar({ member, size = 40 }: { member: Member; size?: number }) {
   const initials = member.name.trim().slice(0, 2).toUpperCase()
@@ -15,12 +22,13 @@ export function Avatar({ member, size = 40 }: { member: Member; size?: number })
 }
 
 export function InstrumentTags({ member }: { member: Member }) {
+  const { t } = useStore()
   return (
     <span className="text-[var(--text-muted)] text-xs">
       {member.instruments
         .map((id) => INSTRUMENTS.find((i) => i.id === id))
         .filter(Boolean)
-        .map((i) => `${i!.emoji} ${i!.name}`)
+        .map((i) => `${i!.emoji} ${t(instrumentKey(i!.id))}`)
         .join(' · ')}
     </span>
   )
@@ -32,14 +40,16 @@ type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 export function Button({ variant = 'ghost', active, className = '', ...rest }: BtnProps) {
-  const base = 'inline-flex items-center justify-center gap-1.5 font-medium transition select-none active:scale-[0.97] disabled:opacity-40'
+  const base = 'inline-flex items-center justify-center gap-1.5 font-semibold transition select-none active:scale-[0.97] disabled:opacity-40'
   const styles = {
-    primary: 'rounded-xl px-4 py-2.5 bg-amber-500 text-slate-950 hover:bg-amber-400',
-    ghost: 'rounded-xl px-3 py-2 bg-[var(--surface-3)] hover:bg-[var(--surface-hover)] text-[var(--text)] border border-[var(--line)]',
-    danger: 'rounded-xl px-3 py-2 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30',
-    chip: `rounded-lg px-3 py-1.5 text-sm border ${
-      active ? 'bg-amber-500 text-slate-950 border-amber-400 font-semibold'
-             : 'bg-[var(--surface-2)] text-[var(--text)] border-[var(--line)] hover:bg-[var(--surface-hover)]'}`,
+    // Головна дія світиться теплим — її видно навіть боковим зором
+    primary: 'rounded-2xl px-5 py-3 text-slate-950 border border-white/25 '
+      + 'bg-gradient-to-b from-amber-300 to-amber-500 shadow-[0_8px_22px_rgba(255,150,50,0.3)]',
+    ghost: 'glass rounded-2xl px-4 py-3 text-[var(--text)]',
+    danger: 'rounded-2xl px-4 py-3 bg-rose-500/18 text-rose-300 border border-rose-500/35',
+    chip: `rounded-2xl px-4 py-2 text-sm border ${
+      active ? 'bg-gradient-to-b from-amber-300 to-amber-500 text-slate-950 border-white/25 font-bold'
+             : 'glass text-[var(--text)]'}`,
   }[variant]
   return <button className={`${base} ${styles} ${className}`} {...rest} />
 }
@@ -52,11 +62,11 @@ export function TopBar({ title, left, right, subtitle }: {
   title: ReactNode; subtitle?: ReactNode; left?: ReactNode; right?: ReactNode
 }) {
   return (
-    <header className="no-print sticky top-0 z-30 bg-[var(--bg)]/85 backdrop-blur-xl border-b border-[var(--line)] pt-safe">
-      <div className="flex items-center gap-2 px-3 h-14">
+    <header className="no-print sticky top-0 z-30 glass rounded-b-3xl pt-safe !border-t-0 !border-x-0">
+      <div className="flex items-center gap-2 px-3 h-16">
         {left}
         <div className="flex-1 min-w-0">
-          <h1 className="font-semibold truncate leading-tight">{title}</h1>
+          <h1 className="font-bold text-lg truncate leading-tight tracking-tight">{title}</h1>
           {subtitle && <div className="text-xs text-[var(--text-muted)] truncate">{subtitle}</div>}
         </div>
         {right}
@@ -102,5 +112,5 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export const inputClass =
-  'w-full rounded-xl bg-[var(--surface-2)] border border-[var(--line)] px-3 py-2.5 text-[var(--text)] ' +
-  'placeholder:text-[var(--text-faint)] outline-none focus:border-amber-500/60 focus:bg-[var(--surface-hover)] transition'
+  'w-full glass rounded-2xl px-4 py-3 text-[var(--text)] ' +
+  'placeholder:text-[var(--text-faint)] outline-none focus:border-amber-400/60 transition'

@@ -120,7 +120,7 @@ export default function SongList({ onOpen, onNew, onEdit }: Props) {
                 {filtered.map((s) => (
                   <SortableRow key={s.id} id={s.id}>
                     {(handle) => (
-                      <div className="flex items-center gap-1 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] pr-1">
+                      <div className="flex items-center gap-1 rounded-3xl glass pr-1">
                         <div className="min-w-0 flex-1 p-3">
                           <div className="font-semibold truncate">{s.title}</div>
                           <div className="text-xs text-[var(--text-faint)] truncate">
@@ -202,8 +202,7 @@ function SongRow({ song, hasNote, noteLabel, onOpen, onHold }: {
     <button
       onClick={() => { if (!consumedClick()) onOpen() }}
       {...handlers}
-      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)]
-                 hover:bg-[var(--surface-hover)] active:scale-[0.99] transition text-left select-none touch-manipulation"
+      className="glass w-full flex items-center gap-3 p-4 rounded-3xl active:scale-[0.99] transition text-left select-none touch-manipulation"
     >
       <div className="min-w-0 flex-1">
         <div className="font-semibold truncate">{song.title}</div>

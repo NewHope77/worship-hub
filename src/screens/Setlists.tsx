@@ -151,7 +151,7 @@ export function SetlistView({ setlist, onBack, onOpenSong }: {
         <div className="flex-1 px-3 py-3 space-y-1.5">
           {available.map((s) => (
             <button key={s.id} onClick={() => addSong(s)}
-              className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)] hover:bg-[var(--surface-hover)] text-left">
+              className="w-full flex items-center gap-3 p-3 rounded-3xl glass hover:bg-[var(--surface-hover)] text-left">
               <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate">{s.title}</div>
                 <div className="text-xs text-[var(--text-faint)] truncate">{s.author || '—'}</div>
@@ -238,7 +238,7 @@ export function SetlistView({ setlist, onBack, onOpenSong }: {
                               return (
                                 <SortableRow key={item.id} id={item.id}>
                                   {(itemHandle) => (
-                                    <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--line)] overflow-hidden">
+                                    <div className="rounded-2xl glass overflow-hidden">
                                       <div className="flex items-center gap-1 pl-1 pr-2">
                                         <DragHandle {...itemHandle} />
                                         <span className="text-xs text-[var(--text-faint)] font-mono w-4">{i + 1}</span>

@@ -169,7 +169,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       />
 
       {panel === 'settings' && (
-        <div className="no-print border-b border-[var(--line)] bg-[var(--panel)] px-4 py-4 space-y-4">
+        <div className="no-print glass rounded-3xl mx-3 mt-3 px-4 py-4 space-y-4">
           <div>
             <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.show')}</div>
             <div className="flex gap-2">
@@ -364,7 +364,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       )}
 
       {panel === 'note' && (
-        <div className="no-print border-b border-[var(--line)] bg-[var(--panel)] px-4 py-4 space-y-3">
+        <div className="no-print glass rounded-3xl mx-3 mt-3 px-4 py-4 space-y-3">
           {song.notes.trim() && (
             <div>
               <div className="text-xs font-medium text-[var(--text-muted)] mb-1">Спільна нотатка (бачать усі)</div>
@@ -399,7 +399,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
         {showFile ? (
           <SongFile songId={song.id} fileName={song.attachment?.name} />
         ) : showOriginal ? (
-          <div className="px-4 pt-4 pb-40 overflow-x-auto">
+          <div className="glass-reading mx-3 mt-3 rounded-3xl px-4 pt-4 pb-40 overflow-x-auto">
             {/*
               Моноширинний шрифт — єдиний спосіб зберегти відступи джерела:
               усі символи однакової ширини, тож акорд лишається над своїм
@@ -413,7 +413,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             />
           </div>
         ) : (
-          <div className={`px-4 pt-4${prefs.chordsAccent ? ' chords-accent' : ''}`}>
+          <div className={`glass-reading mx-3 mt-3 rounded-3xl px-4 pt-4${prefs.chordsAccent ? ' chords-accent' : ''}`}>
             <SongBody
               sections={song.sections}
               arrangement={song.arrangement}
@@ -430,8 +430,8 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       </div>
 
       {/* Нижня панель: розмір тексту — його міняють найчастіше */}
-      <div className="no-print sticky bottom-0 bg-[var(--bg)]/90 backdrop-blur-xl border-t border-[var(--line)] px-3 py-2.5 pb-safe">
-        <div className="flex items-center gap-2">
+      <div className="no-print sticky bottom-0 px-3 pb-safe">
+        <div className="glass flex items-center gap-2 rounded-3xl p-2 mb-3">
           <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
             className="w-12 text-lg font-bold" aria-label="Дрібніший текст">
             A−

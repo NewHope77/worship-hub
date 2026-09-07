@@ -17,8 +17,7 @@ export default function Login() {
           <button
             key={m.id}
             onClick={() => signIn(m.id)}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[var(--surface-2)] border border-[var(--line)]
-                       hover:bg-[var(--surface-hover)] hover:border-[var(--line-strong)] active:scale-[0.98] transition text-left"
+            className="glass w-full flex items-center gap-3 p-4 rounded-3xl active:scale-[0.98] transition text-left"
           >
             <Avatar member={m} size={44} />
             <div className="min-w-0 flex-1">

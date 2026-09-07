@@ -23,7 +23,7 @@ export default function ActionSheet({ title, subtitle, actions, onClose }: {
         onClick={onClose}
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-[fadeIn_.15s_ease-out]"
       />
-      <div className="relative bg-[var(--panel)] border-t border-[var(--line)] rounded-t-3xl p-3 pb-safe
+      <div className="relative glass rounded-t-3xl !border-b-0 p-3 pb-safe
                       shadow-2xl animate-[sheetUp_.2s_ease-out]">
         <div className="w-10 h-1 rounded-full bg-[var(--line-strong)] mx-auto mb-3" />
         <div className="px-3 pb-3">

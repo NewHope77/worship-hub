@@ -80,6 +80,10 @@ const uk = {
   'member.color': 'Колір', 'member.leader': 'Лідер прославлення',
   'member.delete': 'Видалити учасника', 'member.add': '+ Учасник',
   'member.you': '— це ти', 'member.change': 'змінити', 'member.noName': 'Без імені',
+  'profile.instrumentHint': 'зазвичай найзручніше для інструмента',
+  'instrument.vocal': 'Вокал', 'instrument.keys': 'Клавіші',
+  'instrument.agtr': 'Акустика', 'instrument.egtr': 'Електрогітара',
+  'instrument.bass': 'Бас', 'instrument.drums': 'Барабани', 'instrument.sound': 'Звук',
 } as const
 
 export type Key = keyof typeof uk
@@ -154,6 +158,10 @@ const ru: Record<Key, string> = {
   'member.color': 'Цвет', 'member.leader': 'Лидер прославления',
   'member.delete': 'Удалить участника', 'member.add': '+ Участник',
   'member.you': '— это ты', 'member.change': 'изменить', 'member.noName': 'Без имени',
+  'profile.instrumentHint': 'обычно удобнее всего для инструмента',
+  'instrument.vocal': 'Вокал', 'instrument.keys': 'Клавиши',
+  'instrument.agtr': 'Акустика', 'instrument.egtr': 'Электрогитара',
+  'instrument.bass': 'Бас', 'instrument.drums': 'Барабаны', 'instrument.sound': 'Звук',
 }
 
 const en: Record<Key, string> = {
@@ -226,6 +234,10 @@ const en: Record<Key, string> = {
   'member.color': 'Colour', 'member.leader': 'Worship leader',
   'member.delete': 'Remove member', 'member.add': '+ Member',
   'member.you': '— that’s you', 'member.change': 'change', 'member.noName': 'No name',
+  'profile.instrumentHint': 'usually the handiest for',
+  'instrument.vocal': 'Vocals', 'instrument.keys': 'Keys',
+  'instrument.agtr': 'Acoustic', 'instrument.egtr': 'Electric guitar',
+  'instrument.bass': 'Bass', 'instrument.drums': 'Drums', 'instrument.sound': 'Sound',
 }
 
 export const DICT: Record<Lang, Record<Key, string>> = { uk, ru, en }

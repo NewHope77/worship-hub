@@ -26,6 +26,14 @@
 
   --accent: #fbbf24;
   --overlay: rgba(0, 0, 0, 0.6);
+
+  /* Скло: напівпрозорий шар, крізь який видно кольорове тло */
+  --glass: rgba(255, 255, 255, 0.09);
+  --glass-strong: rgba(255, 255, 255, 0.14);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-shine: rgba(255, 255, 255, 0.22);
+  /* Під текстом пісні прозорість заважає читати — там щільніше */
+  --reading: rgba(16, 18, 28, 0.72);
 }
 
 /* Світла тема — для яскравого світла й друку */
@@ -50,9 +58,68 @@
   /* темніший бурштин, інакше акорди зникають на білому */
   --accent: #b45309;
   --overlay: rgba(15, 23, 42, 0.45);
+
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --glass-edge: rgba(255, 255, 255, 0.9);
+  --glass-shine: rgba(255, 255, 255, 0.95);
+  --reading: rgba(255, 255, 255, 0.86);
 }
 
 html, body, #root { height: 100%; }
+
+/*
+ * Кольорові плями під інтерфейсом. Без них скло виглядало б просто сірим:
+ * саме вони дають глибину, коли крізь панелі щось просвічує.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 18% 6%, rgba(120, 90, 255, 0.5), transparent 70%),
+    radial-gradient(55% 38% at 88% 20%, rgba(255, 140, 60, 0.36), transparent 70%),
+    radial-gradient(70% 45% at 50% 100%, rgba(40, 190, 190, 0.3), transparent 70%);
+}
+
+:root.theme-light body::before {
+  background:
+    radial-gradient(60% 40% at 18% 6%, rgba(120, 90, 255, 0.22), transparent 70%),
+    radial-gradient(55% 38% at 88% 20%, rgba(255, 150, 70, 0.2), transparent 70%),
+    radial-gradient(70% 45% at 50% 100%, rgba(40, 190, 190, 0.18), transparent 70%);
+}
+
+/* Скляна поверхня — панелі, картки, кнопки */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24), inset 0 1px 0 var(--glass-shine);
+}
+
+/* Те саме, але щільніше — під текстом пісні, щоб не заважало читати */
+.glass-reading {
+  background: var(--reading);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--glass-edge);
+}
+
+/*
+ * Розмиття дороге для браузера. Там, де система просить менше прозорості
+ * або пристрій слабкий, лишаємо суцільний фон — краще так, ніж ривками.
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-reading {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--panel);
+  }
+  body::before { display: none; }
+}
 
 body {
   margin: 0;
