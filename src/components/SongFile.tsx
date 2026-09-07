@@ -11,6 +11,8 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
   const [file, setFile] = useState<StoredFile | null>(null)
   const [url, setUrl] = useState<string | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
+  /** Знімок спершу вписуємо в екран; дотик показує його в повний розмір */
+  const [zoomed, setZoomed] = useState(false)
 
   useEffect(() => {
     let objectUrl: string | null = null
@@ -77,13 +79,22 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
     <div className="px-3 py-3 space-y-3">
       <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] px-1">
         <span className="truncate flex-1">{file.name}</span>
+        {file.type.startsWith('image/') && (
+          <span className="shrink-0">{zoomed ? 'дотик — вписати' : 'дотик — збільшити'}</span>
+        )}
         <span className="shrink-0">{formatSize(file.size)}</span>
       </div>
 
       {isImage ? (
-        // Знімок гортається й масштабується самим браузером
-        <div className="overflow-auto rounded-xl border border-[var(--line)] bg-white">
-          <img src={url} alt={file.name} className="max-w-none w-auto min-w-full" />
+        <div className={`rounded-xl border border-[var(--line)] bg-white ${
+          zoomed ? 'overflow-auto' : 'overflow-hidden'}`}>
+          <img
+            src={url}
+            alt={file.name}
+            onClick={() => setZoomed((z) => !z)}
+            // Вписано в ширину — видно всю сторінку; дотик дає повний розмір
+            className={zoomed ? 'max-w-none w-auto min-w-full cursor-zoom-out' : 'w-full h-auto cursor-zoom-in'}
+          />
         </div>
       ) : isViewableInBrowser(file.type) ? (
         <iframe
