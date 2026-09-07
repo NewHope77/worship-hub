@@ -122,7 +122,12 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   }
 
   return (
-    <div className="min-h-full flex flex-col">
+    /*
+     * Рівно висота екрана, а не min-height: інакше внутрішній блок
+     * розтягується більше за вікно, прокрутка зникає, і кінець пісні
+     * лишається під нижньою панеллю — дістати його неможливо.
+     */
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
       <TopBar
         left={<BackButton onClick={onBack} />}
         title={song.title}
@@ -169,7 +174,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       />
 
       {panel === 'settings' && (
-        <div className="no-print glass rounded-3xl mx-3 mt-3 px-4 py-4 space-y-4">
+        <div className="no-print glass-bar rounded-3xl mx-3 mt-3 px-4 py-4 space-y-4 relative z-20">
           <div>
             <div className="text-xs font-medium text-[var(--text-muted)] mb-2">{t('view.show')}</div>
             <div className="flex gap-2">
@@ -364,7 +369,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       )}
 
       {panel === 'note' && (
-        <div className="no-print glass rounded-3xl mx-3 mt-3 px-4 py-4 space-y-3">
+        <div className="no-print glass-bar rounded-3xl mx-3 mt-3 px-4 py-4 space-y-3 relative z-20">
           {song.notes.trim() && (
             <div>
               <div className="text-xs font-medium text-[var(--text-muted)] mb-1">Спільна нотатка (бачать усі)</div>
@@ -413,7 +418,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
             />
           </div>
         ) : (
-          <div className={`glass-reading mx-3 mt-3 rounded-3xl px-4 pt-4${prefs.chordsAccent ? ' chords-accent' : ''}`}>
+          <div className={`glass-reading mx-3 mt-3 rounded-3xl px-4 pt-4 pb-28${prefs.chordsAccent ? ' chords-accent' : ''}`}>
             <SongBody
               sections={song.sections}
               arrangement={song.arrangement}
@@ -431,7 +436,7 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
 
       {/* Нижня панель: розмір тексту — його міняють найчастіше */}
       <div className="no-print sticky bottom-0 px-3 pb-safe">
-        <div className="glass flex items-center gap-2 rounded-3xl p-2 mb-3">
+        <div className="glass-bar flex items-center gap-2 rounded-3xl p-2 mb-3">
           <Button onClick={() => zoom(-1)} disabled={fontSize <= zoomMin}
             className="w-12 text-lg font-bold" aria-label="Дрібніший текст">
             A−

@@ -155,7 +155,7 @@ export default function SongBody({
   }
 
   return (
-    <div style={{ fontSize }} className={`pb-40${columns === 2 ? ' two-columns' : ''}`}>
+    <div style={{ fontSize }} className={`pb-8${columns === 2 ? ' two-columns' : ''}`}>
       {items.map(({ section, repeat }, i) => (
         <section key={`${section.id}_${i}`}>
           <SectionHeading section={section} repeat={repeat} />

@@ -62,7 +62,7 @@ export function TopBar({ title, left, right, subtitle }: {
   title: ReactNode; subtitle?: ReactNode; left?: ReactNode; right?: ReactNode
 }) {
   return (
-    <header className="no-print sticky top-0 z-30 glass rounded-b-3xl pt-safe !border-t-0 !border-x-0">
+    <header className="no-print sticky top-0 z-30 glass-bar rounded-b-3xl pt-safe !border-t-0 !border-x-0">
       <div className="flex items-center gap-2 px-3 h-16">
         {left}
         <div className="flex-1 min-w-0">

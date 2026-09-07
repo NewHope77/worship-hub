@@ -34,6 +34,7 @@
   --glass-shine: rgba(255, 255, 255, 0.22);
   /* Під текстом пісні прозорість заважає читати — там щільніше */
   --reading: rgba(16, 18, 28, 0.72);
+  --bar: rgba(14, 16, 24, 0.92);
 }
 
 /* Світла тема — для яскравого світла й друку */
@@ -64,6 +65,7 @@
   --glass-edge: rgba(255, 255, 255, 0.9);
   --glass-shine: rgba(255, 255, 255, 0.95);
   --reading: rgba(255, 255, 255, 0.86);
+  --bar: rgba(248, 250, 252, 0.94);
 }
 
 html, body, #root { height: 100%; }
@@ -100,6 +102,19 @@ body::before {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24), inset 0 1px 0 var(--glass-shine);
 }
 
+/*
+ * Смуги, під якими прокручується вміст: шапка й нижня панель.
+ * Вони мусять бути щільними — крізь прозорі просвічували б рядки пісні,
+ * і текст ставав нечитабельним.
+ */
+.glass-bar {
+  background: var(--bar);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 var(--glass-shine);
+}
+
 /* Те саме, але щільніше — під текстом пісні, щоб не заважало читати */
 .glass-reading {
   background: var(--reading);
@@ -113,7 +128,7 @@ body::before {
  * або пристрій слабкий, лишаємо суцільний фон — краще так, ніж ривками.
  */
 @media (prefers-reduced-transparency: reduce) {
-  .glass, .glass-reading {
+  .glass, .glass-reading, .glass-bar {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: var(--panel);
