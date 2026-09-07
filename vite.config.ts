@@ -36,6 +36,14 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: 'index.html',
+        /*
+         * Без цих двох рядків нова версія чекає, доки закриються всі вкладки
+         * застосунку. Встановлений PWA телефон тримає в пам'яті, тож оновлення
+         * могло не доходити тижнями — група лишалась би на старій версії.
+         */
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],
