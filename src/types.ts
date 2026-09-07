@@ -3,8 +3,8 @@ export type InstrumentId =
 
 export type ViewMode = 'text' | 'chords' | 'grid'
 
-/** Показ пісні: розібраної на секції чи точно як в оригіналі */
-export type Layout = 'parsed' | 'original'
+/** Показ пісні: розібраної, точно як в оригіналі, або сам вихідний файл */
+export type Layout = 'parsed' | 'original' | 'file'
 
 export type Theme = 'dark' | 'light'
 
@@ -75,6 +75,8 @@ export interface Song {
   youtubeUrl: string
   /** Загальні нотатки — бачать усі */
   notes: string
+  /** Оригінальний файл, з якого пісню імпортували — його можна відкрити як є */
+  attachment?: { name: string; type: string; size: number }
   /**
    * Текст точно в тому вигляді, як його вставили або витягли з файлу —
    * з усіма відступами. Показується моноширинним шрифтом «як є».

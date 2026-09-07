@@ -4,3 +4,7 @@ dist-ssr
 .DS_Store
 *.local
 *.tsbuildinfo
+
+# ключі спільної бази — не потрапляють у репозиторій
+.env
+.env.local

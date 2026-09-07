@@ -9,6 +9,7 @@ import ChordPicker from '../components/ChordPicker'
 import ActionSheet from '../components/ActionSheet'
 import { moveChord, replaceChord, removeChord, insertChord } from '../chordpro/editChords'
 import RawSong from '../components/RawSong'
+import SongFile from '../components/SongFile'
 import { transposeRaw, sectionsToRaw } from '../chordpro/rawText'
 import { TopBar, BackButton, Button, inputClass } from '../components/ui'
 
@@ -64,7 +65,10 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
   }, [])
 
   const layout = prefs.layout
-  const showOriginal = layout === 'original'
+  // Файл показуємо лише там, де він справді є — інакше режим порожній
+  const hasFile = !!song.attachment
+  const showFile = layout === 'file' && hasFile
+  const showOriginal = layout === 'original' || showFile
 
   // Текст «як у файлі». Для пісень, доданих раніше, збираємо його з секцій.
   const rawSource = useMemo(
@@ -206,15 +210,23 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
                 onClick={() => setPrefs({ layout: 'parsed' })}>
                 {t('view.parsed')}
               </Button>
-              <Button variant="chip" active={showOriginal} className="flex-1"
+              <Button variant="chip" active={layout === 'original'} className="flex-1"
                 onClick={() => setPrefs({ layout: 'original' })}>
                 {t('view.original')}
               </Button>
+              {hasFile && (
+                <Button variant="chip" active={showFile} className="flex-1"
+                  onClick={() => setPrefs({ layout: 'file' })}>
+                  {t('view.file')}
+                </Button>
+              )}
             </div>
             <div className="text-[11px] text-[var(--text-faint)] mt-1.5">
-              {showOriginal
-                ? 'Вигляд, відступи й переноси — як у джерелі, символ у символ'
-                : 'Переноситься під ширину екрана, акорди прив’язані до складів'}
+              {showFile
+                ? t('view.fileHint')
+                : showOriginal
+                  ? 'Вигляд, відступи й переноси — як у джерелі, символ у символ'
+                  : 'Переноситься під ширину екрана, акорди прив’язані до складів'}
             </div>
           </div>
 
@@ -384,7 +396,9 @@ export default function SongView({ song, setlistTranspose = null, onBack, onEdit
       )}
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        {showOriginal ? (
+        {showFile ? (
+          <SongFile songId={song.id} fileName={song.attachment?.name} />
+        ) : showOriginal ? (
           <div className="px-4 pt-4 pb-40 overflow-x-auto">
             {/*
               Моноширинний шрифт — єдиний спосіб зберегти відступи джерела:

@@ -5,6 +5,7 @@ import { useStore } from '../store'
 import { newId, splitIntoSections, guessKind } from '../chordpro/parse'
 import { keyOptions, isMinorKey } from '../chordpro/transpose'
 import { readSongFile } from '../import/files'
+import { saveSongFile, deleteSongFile } from '../storage/files'
 import { SortableList, SortableRow, DragHandle } from '../components/Sortable'
 import { TopBar, BackButton, Button, Field, inputClass } from '../components/ui'
 
@@ -33,6 +34,8 @@ export default function SongEditor({ song, onDone }: Props) {
   const [progress, setProgress] = useState<{ stage: string; percent: number } | null>(null)
   const [ocrWarning, setOcrWarning] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  // Файл тримаємо до збереження: пісня ще може не мати остаточного id
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [tagInput, setTagInput] = useState(draft.tags.join(', '))
 
@@ -85,6 +88,12 @@ export default function SongEditor({ song, onDone }: Props) {
     try {
       const imported = await readSongFile(file, setProgress)
       applySections(splitIntoSections(imported.text), imported.title, imported.text)
+      // Оригінал лишаємо: інколи треба глянути саме його, з нотами й позначками
+      setPendingFile(file)
+      setDraft((d) => ({
+        ...d,
+        attachment: { name: file.name, type: file.type, size: file.size },
+      }))
       // Розпізнавання зі знімка завжди варте вичитки
       setOcrWarning(imported.kind === 'image')
     } catch (e) {
@@ -97,6 +106,7 @@ export default function SongEditor({ song, onDone }: Props) {
 
   const save = () => {
     const tags = tagInput.split(',').map((t) => t.trim()).filter(Boolean)
+    if (pendingFile) void saveSongFile(draft.id, pendingFile)
     upsertSong({
       ...draft,
       title: draft.title.trim() || 'Без назви',
@@ -110,6 +120,7 @@ export default function SongEditor({ song, onDone }: Props) {
   const remove = () => {
     if (!song) return onDone()
     if (!confirm(`Видалити «${song.title}» назавжди?`)) return
+    void deleteSongFile(song.id)
     deleteSong(song.id)
     onDone()
   }
