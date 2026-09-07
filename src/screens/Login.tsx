@@ -1,5 +1,6 @@
 import { useStore } from '../store'
 import { Avatar, InstrumentTags } from '../components/ui'
+import InstallHint from '../components/InstallHint'
 
 export default function Login() {
   const { data, signIn, t } = useStore()
@@ -35,7 +36,12 @@ export default function Login() {
         ))}
       </div>
 
-      <p className="text-center text-xs text-[var(--text-faint)] mt-8 leading-relaxed">
+      {/* Найперший екран — саме тут доречно нагадати встановити застосунок */}
+      <div className="mt-6 -mx-3">
+        <InstallHint />
+      </div>
+
+      <p className="text-center text-xs text-[var(--text-faint)] mt-4 leading-relaxed">
         {t('login.hint')}
       </p>
     </div>
