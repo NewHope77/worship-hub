@@ -6,6 +6,7 @@ import { newId, splitIntoSections, guessKind } from '../chordpro/parse'
 import { keyOptions, isMinorKey } from '../chordpro/transpose'
 import { readSongFile } from '../import/files'
 import { saveSongFile, deleteSongFile } from '../storage/files'
+import { importFromLink } from '../import/holychords'
 import { SortableList, SortableRow, DragHandle } from '../components/Sortable'
 import { TopBar, BackButton, Button, Field, inputClass } from '../components/ui'
 
@@ -25,7 +26,7 @@ function emptySong(createdBy: string): Song {
 }
 
 export default function SongEditor({ song, onDone }: Props) {
-  const { upsertSong, deleteSong, meId } = useStore()
+  const { upsertSong, deleteSong, meId, t } = useStore()
   const [draft, setDraft] = useState<Song>(() => song ?? emptySong(meId ?? ''))
   const [pasteOpen, setPasteOpen] = useState(!song)
   const [pasteText, setPasteText] = useState('')
@@ -36,6 +37,7 @@ export default function SongEditor({ song, onDone }: Props) {
   const [dragOver, setDragOver] = useState(false)
   // Файл тримаємо до збереження: пісня ще може не мати остаточного id
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [link, setLink] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const [tagInput, setTagInput] = useState(draft.tags.join(', '))
 
@@ -96,6 +98,28 @@ export default function SongEditor({ song, onDone }: Props) {
       }))
       // Розпізнавання зі знімка завжди варте вичитки
       setOcrWarning(imported.kind === 'image')
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setImporting(false)
+      setProgress(null)
+    }
+  }
+
+  const handleLink = async () => {
+    setImportError('')
+    setImporting(true)
+    setProgress({ stage: t('import.linkLoading'), percent: 40 })
+    try {
+      const found = await importFromLink(link)
+      applySections(splitIntoSections(found.text), found.title, found.text)
+      setDraft((d) => ({
+        ...d,
+        title: d.title.trim() || found.title,
+        author: d.author.trim() || found.author,
+        originalKey: found.originalKey,
+      }))
+      setLink('')
     } catch (e) {
       setImportError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -209,6 +233,31 @@ export default function SongEditor({ song, onDone }: Props) {
                 {importError}
               </div>
             )}
+
+            <div className="flex items-center gap-3">
+              <span className="flex-1 h-px bg-[var(--surface-hover)]" />
+              <span className="text-[11px] text-[var(--text-faint)] uppercase tracking-wider">{t('import.link')}</span>
+              <span className="flex-1 h-px bg-[var(--surface-hover)]" />
+            </div>
+
+            <div className="space-y-2">
+              <input
+                className={inputClass}
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="https://holychords.pro/2332"
+                autoCapitalize="off"
+                autoCorrect="off"
+                inputMode="url"
+              />
+              <Button variant="primary" className="w-full"
+                onClick={handleLink} disabled={!link.trim() || importing}>
+                {t('import.linkGo')}
+              </Button>
+              <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">
+                {t('import.linkHint')}
+              </p>
+            </div>
 
             <div className="flex items-center gap-3">
               <span className="flex-1 h-px bg-[var(--surface-hover)]" />
