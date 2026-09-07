@@ -21,25 +21,27 @@ function isIos(): boolean {
 }
 
 /**
- * Нагадування додати застосунок на домашній екран.
- * Сенс усієї затії — щоб пісні відкривались як застосунок, без адресного
- * рядка згори; але зробити це може лише сам користувач, зі свого телефона.
+ * Кнопка встановлення на домашній екран.
+ *
+ * Там, де браузер дозволяє (Chrome на Android), натискання одразу відкриває
+ * системне вікно встановлення. Safari такого API не дає жодному сайту, тому
+ * на iPhone кнопка показує два кроки, які треба зробити вручну.
  */
 export default function InstallHint() {
   const { t } = useStore()
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null)
+  const [howTo, setHowTo] = useState(false)
   const [hidden, setHidden] = useState(
     () => isInstalled() || localStorage.getItem(DISMISSED) === '1',
   )
 
   useEffect(() => {
-    // Chrome дає цю подію, коли застосунок можна встановити одним дотиком
     const onPrompt = (e: Event) => {
       e.preventDefault()
       setPrompt(e as InstallPrompt)
     }
-    window.addEventListener('beforeinstallprompt', onPrompt)
     const onInstalled = () => setHidden(true)
+    window.addEventListener('beforeinstallprompt', onPrompt)
     window.addEventListener('appinstalled', onInstalled)
     return () => {
       window.removeEventListener('beforeinstallprompt', onPrompt)
@@ -55,39 +57,59 @@ export default function InstallHint() {
   }
 
   const install = async () => {
-    if (!prompt) return
+    // Системне вікно є не завжди — тоді лишається показати кроки вручну
+    if (!prompt) {
+      setHowTo(true)
+      return
+    }
     await prompt.prompt()
     const choice = await prompt.userChoice
     if (choice.outcome === 'accepted') setHidden(true)
   }
 
-  return (
-    <div className="no-print mx-3 mb-3 rounded-3xl glass px-4 py-3">
-      <div className="flex items-start gap-3">
-        <span className="text-2xl leading-none mt-0.5">📲</span>
-        <div className="min-w-0 flex-1">
-          <div className="font-semibold text-sm">{t('install.title')}</div>
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
-            {prompt
-              ? t('install.oneTap')
-              : isIos()
-                ? t('install.ios')
-                : t('install.android')}
-          </p>
+  const steps = isIos()
+    ? { intro: t('install.iosSteps'), one: t('install.iosStep1'), two: t('install.iosStep2') }
+    : { intro: t('install.androidSteps'), one: t('install.androidStep1'), two: t('install.androidStep2') }
 
-          <div className="flex gap-2 mt-2.5">
-            {prompt && (
-              <Button variant="primary" className="!py-2 !px-4 text-sm" onClick={install}>
-                {t('install.button')}
-              </Button>
-            )}
-            <button onClick={dismiss}
-              className="text-xs text-[var(--text-faint)] hover:text-[var(--text)] px-1">
-              {t('install.later')}
-            </button>
+  return (
+    <>
+      <div className="no-print px-3">
+        <Button variant="primary" className="w-full !py-4 text-base" onClick={install}>
+          {t('install.cta')}
+        </Button>
+        <button onClick={dismiss}
+          className="w-full text-center text-xs text-[var(--text-faint)] hover:text-[var(--text)] mt-2 py-1">
+          {t('install.later')}
+        </button>
+      </div>
+
+      {howTo && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" role="dialog">
+          <button aria-label={t('common.cancel')} onClick={() => setHowTo(false)}
+            className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm" />
+          <div className="relative glass-bar rounded-t-3xl p-5 pb-safe space-y-4">
+            <div className="w-10 h-1 rounded-full bg-[var(--line-strong)] mx-auto" />
+            <div className="font-semibold text-lg">{t('install.howTitle')}</div>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">{steps.intro}</p>
+
+            <ol className="space-y-3">
+              {[steps.one, steps.two].map((step, i) => (
+                <li key={i} className="flex gap-3 items-start">
+                  <span className="shrink-0 w-7 h-7 rounded-full bg-[var(--accent)] text-slate-950
+                                   grid place-items-center font-bold text-sm">
+                    {i + 1}
+                  </span>
+                  <span className="text-sm leading-relaxed pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+
+            <Button variant="primary" className="w-full" onClick={() => setHowTo(false)}>
+              {t('install.close')}
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }
