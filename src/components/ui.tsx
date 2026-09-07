@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import type { InstrumentId, Member } from '../types'
-import { INSTRUMENTS } from '../types'
+import { INSTRUMENTS, hasRealName } from '../types'
 import { useStore } from '../store'
 import type { Key } from '../i18n'
 
@@ -9,8 +9,20 @@ export function instrumentKey(id: InstrumentId): Key {
   return `instrument.${id}` as Key
 }
 
+/**
+ * Ім'я для показу: справжнє — як вписали, а стартовий підпис перекладається
+ * разом з інтерфейсом, бо це позначка ролі, а не ім'я людини.
+ * Функція, а не хук: імена показуються всередині списків.
+ */
+export function memberName(member: Member, t: (key: Key) => string): string {
+  if (hasRealName(member)) return member.name.trim()
+  const primary = member.instruments[0]
+  return primary ? t(instrumentKey(primary)) : (member.name || t('member.noName'))
+}
+
 export function Avatar({ member, size = 40 }: { member: Member; size?: number }) {
-  const initials = member.name.trim().slice(0, 2).toUpperCase()
+  const { t } = useStore()
+  const initials = memberName(member, t).trim().slice(0, 2).toUpperCase()
   return (
     <div
       className={`shrink-0 rounded-full bg-gradient-to-br ${member.color} grid place-items-center font-bold text-white shadow-lg`}

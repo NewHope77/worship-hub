@@ -4,7 +4,7 @@ import { useStore } from '../store'
 import { newId } from '../chordpro/parse'
 import { transposeKey, semitonesBetween, keyOptions, isMinorKey } from '../chordpro/transpose'
 import { SortableList, SortableRow, DragHandle } from '../components/Sortable'
-import { TopBar, BackButton, Button, Empty, Field, Avatar, inputClass } from '../components/ui'
+import { TopBar, BackButton, Button, Empty, Field, Avatar, inputClass, memberName } from '../components/ui'
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -246,7 +246,7 @@ export function SetlistView({ setlist, onBack, onOpenSong }: {
                                           className="flex-1 min-w-0 text-left py-2.5 px-1">
                                           <div className="font-semibold truncate text-sm">{song.title}</div>
                                           <div className="text-[11px] text-[var(--text-faint)] truncate">
-                                            {lead ? `веде ${lead.name}` : song.author || '—'}
+                                            {lead ? `веде ${memberName(lead, t)}` : song.author || '—'}
                                           </div>
                                         </button>
                                         <select
@@ -278,7 +278,7 @@ export function SetlistView({ setlist, onBack, onOpenSong }: {
                                         >
                                           <option value="" className="bg-[var(--panel)]">{t('setlists.who')}</option>
                                           {data.members.map((m) => (
-                                            <option key={m.id} value={m.id} className="bg-[var(--panel)]">{m.name}</option>
+                                            <option key={m.id} value={m.id} className="bg-[var(--panel)]">{memberName(m, t)}</option>
                                           ))}
                                         </select>
                                         {blocks.length > 1 && (

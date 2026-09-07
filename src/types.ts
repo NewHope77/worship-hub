@@ -21,6 +21,7 @@ export interface Instrument {
 
 export interface Member {
   id: string
+  /** Порожнє — учасника ще не назвали, показуємо його за інструментом */
   name: string
   instruments: InstrumentId[]
   isLeader: boolean
@@ -155,6 +156,19 @@ export interface AppData {
  * Вокалісту й барабанщику вони лише заважають читати текст.
  */
 const CHORD_INSTRUMENTS: InstrumentId[] = ['keys', 'agtr', 'egtr', 'bass']
+
+/**
+ * Стартові підписи, які застосунок роздав до того, як група вписала
+ * справжні імена. Такі підписи — не імена, тож їх можна перекладати.
+ */
+const AUTO_NAMES = new Set([
+  'Клавішниця', 'Акустика', 'Вокалістка', 'Електрогітара', 'Бас', 'Барабани', 'Звук',
+])
+
+export function hasRealName(member: { name: string }): boolean {
+  const n = member.name.trim()
+  return n.length > 0 && !AUTO_NAMES.has(n)
+}
 
 /** Чи потрібні цьому учаснику акорди взагалі */
 export function needsChords(member: { instruments: InstrumentId[] } | null): boolean {

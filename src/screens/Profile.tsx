@@ -7,7 +7,7 @@ import { newId } from '../chordpro/parse'
 import { isCloudConnected } from '../storage'
 import { downloadBackup, readBackup, mergeBackup } from '../storage/backup'
 import CloudSetup from './CloudSetup'
-import { TopBar, BackButton, Button, Avatar, InstrumentTags, Field, inputClass, instrumentKey } from '../components/ui'
+import { TopBar, BackButton, Button, Avatar, InstrumentTags, Field, inputClass, instrumentKey, memberName } from '../components/ui'
 
 const COLORS = [
   'from-violet-500 to-fuchsia-500',
@@ -58,7 +58,7 @@ export default function Profile() {
               <Avatar member={m} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold flex items-center gap-1.5">
-                  {m.name || t('member.noName')}
+                  {memberName(m, t)}
                   {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-amber-400/15 px-1.5 py-0.5 rounded">лідер</span>}
                   {m.id === meId && <span className="text-[10px] text-[var(--text-faint)]">{t('member.you')}</span>}
                 </div>
@@ -81,7 +81,7 @@ export default function Profile() {
         <div className="flex items-center gap-4">
           <Avatar member={me} size={64} />
           <div className="min-w-0">
-            <div className="text-xl font-bold truncate">{me.name}</div>
+            <div className="text-xl font-bold truncate">{memberName(me, t)}</div>
             <InstrumentTags member={me} />
           </div>
         </div>

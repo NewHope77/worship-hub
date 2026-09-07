@@ -1,5 +1,5 @@
 import { useStore } from '../store'
-import { Avatar, InstrumentTags } from '../components/ui'
+import { Avatar, InstrumentTags, memberName } from '../components/ui'
 import InstallHint from '../components/InstallHint'
 import { LANGS } from '../i18n'
 
@@ -24,7 +24,7 @@ export default function Login() {
             <Avatar member={m} size={44} />
             <div className="min-w-0 flex-1">
               <div className="font-semibold flex items-center gap-1.5">
-                {m.name}
+                {memberName(m, t)}
                 {m.isLeader && <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)] bg-amber-400/15 px-1.5 py-0.5 rounded">{t('login.leader')}</span>}
               </div>
               <InstrumentTags member={m} />
