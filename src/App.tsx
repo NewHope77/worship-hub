@@ -88,11 +88,16 @@ export default function App() {
       </div>
 
       {/* Вкладки — окремі скляні картки, під палець */}
-      <nav className="no-print fixed bottom-0 inset-x-0 z-40 px-3 pb-safe">
+      {/*
+        Підкладка під вкладками: самі картки щільні, але між ними є проміжки,
+        і крізь них просвічував текст, що прокручується нижче.
+      */}
+      <nav className="no-print fixed bottom-0 inset-x-0 z-40 px-3 pb-safe
+                      bg-gradient-to-t from-[var(--bar)] via-[var(--bar)] to-transparent pt-6">
         <div className="flex gap-2 max-w-lg mx-auto pb-3">
           {TABS.map((item) => (
             <button key={item.id} onClick={() => setTab(item.id)}
-              className={`glass flex-1 flex flex-col items-center justify-center gap-0.5 h-16
+              className={`glass-bar flex-1 flex flex-col items-center justify-center gap-0.5 h-16
                 rounded-3xl transition active:scale-95 ${
                 tab === item.id
                   ? 'text-[var(--accent)] !bg-[var(--glass-strong)]'
