@@ -129,23 +129,35 @@ export default function SongFile({ songId, fileName }: { songId: string; fileNam
       ) : docx ? (
         // Сторінка документа: біле полотно, як у Word
         <div className="rounded-2xl bg-white text-[#111] px-5 py-6 shadow-lg overflow-x-auto">
-          {docx.map((b, i) => (
-            <p
-              key={i}
-              style={{
-                textAlign: b.align,
-                fontWeight: b.bold || b.heading ? 700 : 400,
-                fontStyle: b.italic ? 'italic' : undefined,
-                textDecoration: b.underline ? 'underline' : undefined,
-                fontSize: b.heading ? '1.25em' : b.size ? `${b.size}pt` : undefined,
-                whiteSpace: 'pre-wrap',
-                margin: b.text.trim() ? '0 0 0.55em' : '0 0 0.9em',
-                lineHeight: 1.45,
-              }}
-            >
-              {b.text.trim() ? b.text : '\u00A0'}
-            </p>
-          ))}
+          {docx.map((b, i) => {
+            // Пісні в Word набирають моноширинним: саме пробіли тримають
+            // акорди над потрібними складами, тож шрифт треба зберегти
+            const mono = /courier|mono|consol/i.test(b.font ?? '')
+            return (
+              <p
+                key={i}
+                style={{
+                  textAlign: b.align,
+                  fontWeight: b.bold || b.heading ? 700 : 400,
+                  fontStyle: b.italic ? 'italic' : undefined,
+                  textDecoration: b.underline ? 'underline' : undefined,
+                  // Кегль беремо з документа; типовий у Word — 11pt, не 16px
+                  fontSize: b.heading ? '1.2em' : `${b.size ?? 11}pt`,
+                  fontFamily: mono
+                    ? "'Courier New', ui-monospace, monospace"
+                    : b.font
+                      ? `'${b.font}', system-ui, sans-serif`
+                      : undefined,
+                  // Переносити не можна: перенос зсуває акорди відносно слів
+                  whiteSpace: mono ? 'pre' : 'pre-wrap',
+                  margin: b.text.trim() ? '0 0 0.15em' : '0 0 0.7em',
+                  lineHeight: 1.3,
+                }}
+              >
+                {b.text.trim() ? b.text : '\u00A0'}
+              </p>
+            )
+          })}
         </div>
       ) : docxFailed ? (
         <div className="px-6 py-8 text-center">
